@@ -1,7 +1,7 @@
 import type { Method } from 'axios';
 import UCommon from '../UCommon/UCommon';
 import { _guid } from '../../config';
-import { extractUinFromCookie } from '../../../util/cookieResolver';
+import { extractCookieValue, extractUinFromCookie } from '../../../util/cookieResolver';
 import type { ApiOptions, ApiResponse } from '../../../types/api';
 
 type AudioQuality = 'm4a' | '128' | '320' | 'ape' | 'flac';
@@ -156,6 +156,7 @@ export default async ({
   const guid = String(_guid || '1429839143');
   const cookie = getCookieFromOptions(option);
   const uin = resolveUin(cookie);
+  const authst = extractCookieValue(cookie, 'qqmusic_key');
   const fileType = FILE_TYPE_MAP[quality];
   const filename = songmidList.map(item => `${fileType.prefix}${item}${mediaId || item}${fileType.suffix}`);
 
@@ -170,7 +171,8 @@ export default async ({
         songtype: [0],
         uin,
         loginflag: 1,
-        platform: '20'
+        platform: '20',
+        ...(authst ? { authst } : {})
       }
     },
     loginUin: uin,
@@ -184,7 +186,6 @@ export default async ({
 
   const upstreamParams = {
     format: 'json',
-    sign: 'zzannc1o6o9b4i971602f3554385022046ab796512b7012',
     data: JSON.stringify(requestPayload)
   };
 

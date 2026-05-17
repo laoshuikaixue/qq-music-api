@@ -7,9 +7,11 @@ WORKDIR /app
 
 COPY package.json .
 
-RUN yarn install --registry=https://registry.npmmirror.com
+RUN npm install --registry=https://registry.npmmirror.com
 
 COPY . .
+
+RUN npm run build
 
 EXPOSE 3200
 

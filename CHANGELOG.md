@@ -1,3 +1,12 @@
+## 2.3.1 (2026-05-17)
+
+
+### Features
+
+* refresh docs and package contents ([#15](https://github.com/sansenjian/qq-music-api/issues/15)) ([2b8cca1](https://github.com/sansenjian/qq-music-api/commit/2b8cca11ef9eff1daca4bbc5c3c5783124434471))
+
+
+
 ## 2.2.11 (2026-03-21)
 
 

@@ -1,7 +1,7 @@
 {
-  "version": "2.3.0",
+  "version": "2.3.1",
   "name": "@sansenjian/qq-music-api",
-  "generatedAt": "2026-05-17T14:56:28.258Z",
-  "commit": "bc41b80",
-  "branch": "docs/update-docs"
+  "generatedAt": "2026-05-17T15:29:28.827Z",
+  "commit": "2b8cca1",
+  "branch": "main"
 }

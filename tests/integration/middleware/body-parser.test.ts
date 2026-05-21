@@ -28,4 +28,15 @@ describe('Body Parser Middleware', () => {
 		});
 		expect(next).toHaveBeenCalled();
 	});
+
+	test('should reject request bodies larger than the configured limit', async () => {
+		const ctx = createCtx('a'.repeat(56 * 1024 + 1), 'application/x-www-form-urlencoded');
+		const next = vi.fn().mockResolvedValue(undefined);
+
+		await expect(bodyParser()(ctx, next)).rejects.toMatchObject({
+			status: 413,
+			message: 'Request body too large',
+		});
+		expect(next).not.toHaveBeenCalled();
+	});
 });

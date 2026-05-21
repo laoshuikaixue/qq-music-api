@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import getSearchByKeyController from '../../../../routers/context/getSearchByKey';
 import { getSearchByKey } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getSearchByKey', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -14,8 +16,13 @@ describe('routers/context/getSearchByKey', () => {
       query: {},
       params: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should return 400 when search key is missing', async () => {
@@ -32,7 +39,7 @@ describe('routers/context/getSearchByKey', () => {
   test('should use query.key when provided', async () => {
     mockCtx.query = { key: 'test music' };
     mockCtx.params = {};
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -52,7 +59,7 @@ describe('routers/context/getSearchByKey', () => {
   test('should use params.key when query.key is not provided', async () => {
     mockCtx.query = {};
     mockCtx.params = { key: 'param key' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -72,7 +79,7 @@ describe('routers/context/getSearchByKey', () => {
   test('should prefer query.key over params.key', async () => {
     mockCtx.query = { key: 'query key' };
     mockCtx.params = { key: 'param key' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -91,7 +98,7 @@ describe('routers/context/getSearchByKey', () => {
 
   test('should accept limit param', async () => {
     mockCtx.query = { key: 'test', limit: '50' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -110,7 +117,7 @@ describe('routers/context/getSearchByKey', () => {
 
   test('should accept page param', async () => {
     mockCtx.query = { key: 'test', page: '5' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -129,7 +136,7 @@ describe('routers/context/getSearchByKey', () => {
 
   test('should accept catZhida param', async () => {
     mockCtx.query = { key: 'test', catZhida: '0' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -148,7 +155,7 @@ describe('routers/context/getSearchByKey', () => {
 
   test('should accept truthy catZhida param', async () => {
     mockCtx.query = { key: 'test', catZhida: '5' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -167,7 +174,7 @@ describe('routers/context/getSearchByKey', () => {
 
   test('should accept remoteplace param', async () => {
     mockCtx.query = { key: 'test', remoteplace: 'album' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -186,7 +193,7 @@ describe('routers/context/getSearchByKey', () => {
 
   test('should handle invalid numeric params', async () => {
     mockCtx.query = { key: 'test', limit: 'abc', page: 'xyz' };
-    (getSearchByKey as jest.Mock).mockResolvedValue({ status: 200, body: {} });
+    (getSearchByKey as Mock).mockResolvedValue({ status: 200, body: {} });
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -209,7 +216,7 @@ describe('routers/context/getSearchByKey', () => {
       status: 200,
       body: { code: 0, data: { song: { list: [] } } }
     };
-    (getSearchByKey as jest.Mock).mockResolvedValue(mockResponse);
+    (getSearchByKey as Mock).mockResolvedValue(mockResponse);
 
     await getSearchByKeyController(mockCtx, mockNext);
 
@@ -220,8 +227,12 @@ describe('routers/context/getSearchByKey', () => {
   test('should handle errors from getSearchByKey', async () => {
     mockCtx.query = { key: 'test' };
     const mockError = new Error('Search error');
-    (getSearchByKey as jest.Mock).mockRejectedValue(mockError);
+    (getSearchByKey as Mock).mockRejectedValue(mockError);
 
-    await expect(getSearchByKeyController(mockCtx, mockNext)).rejects.toThrow('Search error');
+    await getSearchByKeyController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'Search error' });
   });
 });

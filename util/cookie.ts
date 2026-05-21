@@ -1,4 +1,4 @@
-import { Context, Next } from 'koa';
+import { Context, Next, Middleware } from 'koa';
 import type { UserInfo } from '../types/global';
 import serviceConfig from '../config/service-config';
 import { resolveRequestCookie, setRequestCookieContext } from './cookieResolver';
@@ -9,18 +9,21 @@ declare global {
 
 const SAFE_COOKIE_NAMES = new Set(['qqmusic_key', 'qqmusic_uin']);
 
-const cookieMiddleware = () => async (ctx: Context, next: Next) => {
+const cookieMiddleware = (): Middleware => async (ctx: Context, next: Next) => {
+  const useFallback = serviceConfig.fallbackMode;
+  const useGlobal = serviceConfig.useGlobalCookie;
+
   const { cookie } = resolveRequestCookie(ctx, {
-    fallbackMode: serviceConfig.fallbackMode,
-    useGlobalCookie: serviceConfig.useGlobalCookie,
-    cookieParamName: serviceConfig.cookieParamName
+    fallbackMode: useFallback,
+    useGlobalCookie: useGlobal,
+    cookieParamName: serviceConfig.cookieParamName,
   });
 
   if (cookie) {
     setRequestCookieContext(ctx, cookie);
   }
 
-  if (serviceConfig.useGlobalCookie && Array.isArray(global.userInfo?.cookieList)) {
+  if (useGlobal && Array.isArray(global.userInfo?.cookieList)) {
     global.userInfo.cookieList.forEach((cookieItem: string) => {
       const [key, ...valueParts] = cookieItem.split('=');
       const normalizedKey = key?.trim();
@@ -30,7 +33,7 @@ const cookieMiddleware = () => async (ctx: Context, next: Next) => {
         ctx.cookies.set(normalizedKey, value, {
           overwrite: true,
           httpOnly: false,
-          sameSite: 'lax'
+          sameSite: 'lax',
         });
       }
     });

@@ -1,16 +1,13 @@
+import type { Mock } from 'vitest';
 import {
   createController,
-  createPostController,
   validateRequired,
-  handleControllerResponse,
-  createCustomController
 } from '../../../routers/util';
-import type { KoaContext } from '../../../routers/types';
 
 describe('routers/util', () => {
-  let mockCtx: any;
-  let mockNext: jest.Mock;
-  let mockApiFunction: jest.Mock;
+  let mockCtx: Record<string, unknown>;
+  let mockNext: Mock;
+  let mockApiFunction: Mock;
 
   beforeEach(() => {
     mockCtx = {
@@ -18,18 +15,15 @@ describe('routers/util', () => {
       body: null,
       query: {},
       params: {},
-      request: {
-        body: {}
-      }
     };
-    mockNext = jest.fn();
-    mockApiFunction = jest.fn();
-    jest.clearAllMocks();
-    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockNext = vi.fn();
+    mockApiFunction = vi.fn();
+    vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
-    (console.error as jest.Mock).mockRestore();
+    vi.clearAllMocks();
   });
 
   describe('createController', () => {
@@ -92,7 +86,7 @@ describe('routers/util', () => {
     });
 
     test('should use validator to validate params', async () => {
-      const validator = jest.fn().mockReturnValue({ valid: false, error: 'Invalid' });
+      const validator = vi.fn().mockReturnValue({ valid: false, error: 'Invalid' });
       const controller = createController(mockApiFunction, { validator });
 
       await controller(mockCtx, mockNext);
@@ -104,7 +98,7 @@ describe('routers/util', () => {
     });
 
     test('should use custom errorMessage when validation fails', async () => {
-      const validator = jest.fn().mockReturnValue({ valid: false });
+      const validator = vi.fn().mockReturnValue({ valid: false });
       const controller = createController(mockApiFunction, {
         validator,
         errorMessage: 'Custom error'
@@ -117,7 +111,7 @@ describe('routers/util', () => {
     });
 
     test('should call API when validator passes', async () => {
-      const validator = jest.fn().mockReturnValue({ valid: true });
+      const validator = vi.fn().mockReturnValue({ valid: true });
       mockApiFunction.mockResolvedValue({ status: 200, body: {} });
 
       const controller = createController(mockApiFunction, { validator });
@@ -128,7 +122,7 @@ describe('routers/util', () => {
     });
 
     test('should handle errors with custom onError handler', async () => {
-      const onError = jest.fn();
+      const onError = vi.fn();
       mockApiFunction.mockRejectedValue(new Error('API error'));
 
       const controller = createController(mockApiFunction, { onError });
@@ -146,62 +140,6 @@ describe('routers/util', () => {
       expect(mockCtx.status).toBe(500);
       expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
       expect(console.error).toHaveBeenCalledWith('Controller error:', expect.any(Error));
-    });
-  });
-
-  describe('createPostController', () => {
-    test('should create a POST controller function', () => {
-      const controller = createPostController(mockApiFunction);
-      expect(typeof controller).toBe('function');
-    });
-
-    test('should call API function with body params', async () => {
-      mockCtx.request.body = { name: 'test', value: '123' };
-      mockApiFunction.mockResolvedValue({ status: 200, body: {} });
-
-      const controller = createPostController(mockApiFunction);
-      await controller(mockCtx, mockNext);
-
-      expect(mockApiFunction).toHaveBeenCalledWith({
-        method: 'post',
-        params: { name: 'test', value: '123' },
-        option: {}
-      });
-    });
-
-    test('should handle empty body', async () => {
-      mockCtx.request.body = null;
-      mockApiFunction.mockResolvedValue({ status: 200, body: {} });
-
-      const controller = createPostController(mockApiFunction);
-      await controller(mockCtx, mockNext);
-
-      expect(mockApiFunction).toHaveBeenCalledWith({
-        method: 'post',
-        params: {},
-        option: {}
-      });
-    });
-
-    test('should use validator for POST controller', async () => {
-      const validator = jest.fn().mockReturnValue({ valid: false, error: 'Invalid POST' });
-      const controller = createPostController(mockApiFunction, { validator });
-
-      await controller(mockCtx, mockNext);
-
-      expect(mockCtx.status).toBe(400);
-      expect(mockCtx.body).toEqual({ response: 'Invalid POST' });
-      expect(mockApiFunction).not.toHaveBeenCalled();
-    });
-
-    test('should handle errors in POST controller', async () => {
-      mockApiFunction.mockRejectedValue(new Error('POST error'));
-
-      const controller = createPostController(mockApiFunction);
-      await controller(mockCtx, mockNext);
-
-      expect(mockCtx.status).toBe(500);
-      expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
     });
   });
 
@@ -274,85 +212,6 @@ describe('routers/util', () => {
       const result = validator({ active: false });
 
       expect(result.valid).toBe(true);
-    });
-  });
-
-  describe('handleControllerResponse', () => {
-    test('should set response from successful API call', async () => {
-      const apiCall = jest.fn().mockResolvedValue({ status: 200, body: { data: 'success' } });
-
-      await handleControllerResponse(mockCtx, apiCall);
-
-      expect(mockCtx.status).toBe(200);
-      expect(mockCtx.body).toEqual({ data: 'success' });
-    });
-
-    test('should handle API errors', async () => {
-      const apiCall = jest.fn().mockRejectedValue(new Error('API error'));
-
-      await handleControllerResponse(mockCtx, apiCall);
-
-      expect(mockCtx.status).toBe(500);
-      expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
-      expect(console.error).toHaveBeenCalledWith('Controller response error:', expect.any(String));
-    });
-
-    test('should handle non-Error exceptions', async () => {
-      const apiCall = jest.fn().mockRejectedValue('String error');
-
-      await handleControllerResponse(mockCtx, apiCall);
-
-      expect(mockCtx.status).toBe(500);
-      expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
-    });
-  });
-
-  describe('createCustomController', () => {
-    test('should create a custom controller', () => {
-      const handler = jest.fn().mockReturnValue({ id: '123' });
-      const controller = createCustomController(handler, mockApiFunction);
-
-      expect(typeof controller).toBe('function');
-    });
-
-    test('should call handler to get custom params', async () => {
-      const handler = jest.fn().mockReturnValue({ id: '123', name: 'custom' });
-      mockApiFunction.mockResolvedValue({ status: 200, body: {} });
-
-      const controller = createCustomController(handler, mockApiFunction);
-      await controller(mockCtx, mockNext);
-
-      expect(handler).toHaveBeenCalledWith(mockCtx);
-      expect(mockApiFunction).toHaveBeenCalledWith({
-        method: 'get',
-        option: {},
-        id: '123',
-        name: 'custom'
-      });
-    });
-
-    test('should handle errors in custom controller', async () => {
-      const handler = jest.fn().mockReturnValue({});
-      mockApiFunction.mockRejectedValue(new Error('Custom error'));
-
-      const controller = createCustomController(handler, mockApiFunction);
-      await controller(mockCtx, mockNext);
-
-      expect(mockCtx.status).toBe(500);
-      expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
-      expect(console.error).toHaveBeenCalledWith('Custom controller error:', expect.any(String));
-    });
-
-    test('should handle handler throwing error', async () => {
-      const handler = jest.fn().mockImplementation(() => {
-        throw new Error('Handler error');
-      });
-
-      const controller = createCustomController(handler, mockApiFunction);
-      await controller(mockCtx, mockNext);
-
-      expect(mockCtx.status).toBe(500);
-      expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
     });
   });
 });

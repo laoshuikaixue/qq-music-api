@@ -1,35 +1,89 @@
-// 测试工具函数
+/// <reference types="vitest/globals" />
 
 import Koa from 'koa';
+import bodyParser from '../../middlewares/body-parser';
+import router from '../../routers/router';
+import cors from '../../middlewares/koa-cors';
+import type { UserInfo } from '../../types/global';
 
-/**
- * 创建测试用的 Koa 应用实例
- */
-export function createTestApp(): Koa {
-  return new Koa();
+export function createTestApp() {
+  const app = new Koa();
+  app.use(cors());
+  app.use(bodyParser());
+  app.use(router.routes());
+  app.use(router.allowedMethods());
+  return app;
 }
 
-/**
- * 等待指定毫秒数
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * 生成随机字符串
- */
-export function randomString(length: number = 10): string {
-  return Math.random().toString(36).substring(2, length + 2);
-}
-
-/**
- * Mock 响应数据生成器
- */
-export function createMockResponse<T>(data: T, code: number = 0) {
+export function createTestUserInfo(): UserInfo {
   return {
-    code,
-    data,
-    message: code === 0 ? 'success' : 'error',
+    loginUin: '123456',
+    cookie: 'test_cookie=123',
+    cookieList: ['test_cookie=123'],
+    cookieObject: { test_cookie: '123' },
+    refreshData: () => {}
   };
 }
+
+interface FetchResponseOptions {
+  ok?: boolean;
+  text?: string;
+  arrayBuffer?: Buffer;
+  headers?: Record<string, string>;
+  status?: number;
+}
+
+export const createFetchResponse = ({
+  ok = true,
+  text = '',
+  arrayBuffer = Buffer.from(''),
+  headers = {},
+  status = 200
+}: FetchResponseOptions = {}) => ({
+  ok,
+  status,
+  text: async () => text,
+  arrayBuffer: async () => arrayBuffer,
+  headers: {
+    get: (name: string) => {
+      const matchedKey = Object.keys(headers).find(key => key.toLowerCase() === String(name).toLowerCase());
+      return matchedKey ? headers[matchedKey] : null;
+    }
+  }
+});
+
+type AnyRecord = Record<string, any>;
+
+export const expectSuccessResponse = (body: AnyRecord) => {
+  expect(body).toHaveProperty('response');
+  expect(body).not.toHaveProperty('error');
+  expect(body.response).toHaveProperty('code');
+  expect(body.response).toHaveProperty('data');
+};
+
+export const expectErrorResponse = (body: AnyRecord) => {
+  expect(body).toHaveProperty('error');
+  expect(body).not.toHaveProperty('response');
+};
+
+export const mockGlobalFetch = () => ((global as unknown as { fetch: unknown }).fetch = vi.fn());
+export const cleanupGlobalFetch = () => delete (global as unknown as { fetch?: unknown }).fetch;
+
+export function getLatestRequestOptions(mockFn: { mock: { calls: unknown[][] } }): Record<string, unknown> {
+  const latestCall = mockFn.mock.calls[mockFn.mock.calls.length - 1] || [];
+  return (latestCall[0] || {}) as Record<string, unknown>;
+}
+
+export function getLatestRequestCookie(mockFn: { mock: { calls: unknown[][] } }) {
+  const headers = (getLatestRequestOptions(mockFn).headers || {}) as Record<string, string>;
+  return headers.Cookie || headers.cookie;
+}
+
+export function getLatestRequestPayload(mockFn: { mock: { calls: unknown[][] } }) {
+  const latestOptions = getLatestRequestOptions(mockFn);
+  return latestOptions.data ? JSON.parse(latestOptions.data as string) : null;
+}
+
+export type AnyMiddleware = (ctx: any, next: () => Promise<unknown>) => Promise<void>;
+
+export type { AnyRecord };

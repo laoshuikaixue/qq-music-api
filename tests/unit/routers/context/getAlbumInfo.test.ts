@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import getAlbumInfoController from '../../../../routers/context/getAlbumInfo';
 import { getAlbumInfo } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getAlbumInfo', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
-  let consoleErrorSpy: jest.SpyInstance;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -14,9 +15,9 @@ describe('routers/context/getAlbumInfo', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -30,14 +31,14 @@ describe('routers/context/getAlbumInfo', () => {
 
     expect(mockCtx.status).toBe(400);
     expect(mockCtx.body).toEqual({
-      error: 'no albummid'
+      response: '缺少必需参数：albummid'
     });
     expect(getAlbumInfo).not.toHaveBeenCalled();
   });
 
   test('should call getAlbumInfo with albummid param', async () => {
     mockCtx.query = { albummid: 'test123' };
-    (getAlbumInfo as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getAlbumInfo as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getAlbumInfoController(mockCtx, mockNext);
 
@@ -54,7 +55,7 @@ describe('routers/context/getAlbumInfo', () => {
       status: 200,
       body: { code: 0, data: { album: { name: 'Test Album' } } }
     };
-    (getAlbumInfo as jest.Mock).mockResolvedValue(mockResponse);
+    (getAlbumInfo as Mock).mockResolvedValue(mockResponse);
 
     await getAlbumInfoController(mockCtx, mockNext);
 
@@ -74,12 +75,12 @@ describe('routers/context/getAlbumInfo', () => {
   test('should handle errors from getAlbumInfo', async () => {
     mockCtx.query = { albummid: 'test123' };
     const mockError = new Error('Album info error');
-    (getAlbumInfo as jest.Mock).mockRejectedValue(mockError);
+    (getAlbumInfo as Mock).mockRejectedValue(mockError);
 
     await getAlbumInfoController(mockCtx, mockNext);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
-    expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: 'Album info error' });
+    expect(mockCtx.status).toBe(500);
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 });

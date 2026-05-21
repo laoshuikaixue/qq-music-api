@@ -1,36 +1,41 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 interface UserInfo {
-  loginUin: string;
-  uin?: string;
-  cookie: string;
-  cookieList: string[];
-  cookieObject: Record<string, string>;
-  refreshData: (cookie: string) => any;
-  [key: string]: any;
+	loginUin: string;
+	uin?: string;
+	cookie: string;
+	cookieList: string[];
+	cookieObject: Record<string, string>;
+	refreshData: (cookie: string) => any;
+	[key: string]: any;
 }
 
 let userInfo: UserInfo = { loginUin: '', cookie: '', cookieList: [], cookieObject: {}, refreshData: () => ({}) };
 let cookieList: string[] = [];
 let cookieObject: Record<string, string> = {};
 
-const infoPath = path.join(__dirname, './user-info.json');
+const configDir = process.env.QQ_MUSIC_API_CONFIG_DIR
+	? path.resolve(process.env.QQ_MUSIC_API_CONFIG_DIR)
+	: path.resolve(process.cwd(), 'config');
+const infoPath = path.join(configDir, 'user-info.json');
+
+fs.mkdirSync(configDir, { recursive: true });
 if (!fs.existsSync(infoPath)) {
-  fs.writeFileSync(infoPath, '{}', 'utf-8');
+	fs.writeFileSync(infoPath, '{}', 'utf-8');
 }
 
 const initData = () => {
 	try {
 		const parsed = JSON.parse(fs.readFileSync(infoPath, 'utf-8'));
-		userInfo = { 
-      loginUin: parsed.loginUin || '', 
-      cookie: parsed.cookie || '', 
-      cookieList: [],
-      cookieObject: {},
-      refreshData: () => ({})
-    };
-	} catch (e) {
+		userInfo = {
+			loginUin: parsed.loginUin || '',
+			cookie: parsed.cookie || '',
+			cookieList: [],
+			cookieObject: {},
+			refreshData: () => ({}),
+		};
+	} catch {
 		userInfo = { loginUin: '', cookie: '', cookieList: [], cookieObject: {}, refreshData: () => ({}) };
 	}
 	cookieList = (userInfo.cookie || '').split('; ').map(_ => _.trim());
@@ -53,19 +58,19 @@ const refreshData = (cookie: string) => {
 		...userInfo,
 		uin: userInfo.loginUin || cookieObject.uin,
 		cookieList,
-		cookieObject
+		cookieObject,
 	};
 };
 
 initData();
 
 const exportObj: UserInfo = {
-  loginUin: userInfo?.loginUin || '',
-  uin: userInfo?.loginUin || cookieObject?.uin || '',
-  cookie: userInfo?.cookie || '',
-  cookieList: cookieList || [],
-  cookieObject: cookieObject || {},
-  refreshData
+	loginUin: userInfo?.loginUin || '',
+	uin: userInfo?.loginUin || cookieObject?.uin || '',
+	cookie: userInfo?.cookie || '',
+	cookieList: cookieList || [],
+	cookieObject: cookieObject || {},
+	refreshData,
 };
 
 export default exportObj as UserInfo;

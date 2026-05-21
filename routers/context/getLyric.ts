@@ -1,44 +1,30 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { getLyric } from '../../module';
 import { resolveRequestCookie } from '../../util/cookieResolver';
+import { setApiResponse, withErrorHandler } from '../util';
 
-const controller: Controller = async (ctx, next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const songmid = Array.isArray(ctx.query.songmid)
     ? ctx.query.songmid[0]
     : (ctx.query.songmid || ctx.params.songmid);
   const rawIsFormat = Array.isArray(ctx.query.isFormat) ? ctx.query.isFormat[0] : ctx.query.isFormat;
 
+  if (!songmid) {
+    setApiResponse(ctx, { status: 400, body: { response: 'no songmid' } });
+    return;
+  }
+
   const { cookie: effectiveCookie } = resolveRequestCookie(ctx);
   const headers: Record<string, string> = {};
-
-  if (effectiveCookie) {
-    headers.Cookie = effectiveCookie;
-  }
+  if (effectiveCookie) headers.Cookie = effectiveCookie;
 
   const props = {
     method: 'get',
-    params: {
-      songmid
-    },
-    option: {
-      headers
-    },
-    isFormat: rawIsFormat
+    params: { songmid },
+    option: { headers },
+    isFormat: rawIsFormat,
   };
 
-  if (songmid) {
-    const { status, body } = await getLyric(props);
-    Object.assign(ctx, {
-      status,
-      body
-    });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      response: 'no songmid'
-    };
-  }
-};
-
-export default controller;
-
+  const result = await getLyric(props);
+  setApiResponse(ctx, result);
+});

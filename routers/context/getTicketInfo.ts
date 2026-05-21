@@ -1,55 +1,32 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
-const controller: Controller = async (ctx, next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const data = {
-    comm: {
-      ct: 24,
-      cv: 0
-    },
+    comm: { ct: 24, cv: 0 },
     getFirstData: {
       module: 'mall.ticket_index_page_svr',
       method: 'GetTicketIndexPage',
-      param: {
-        city_id: -1
-      }
+      param: { city_id: -1 },
     },
     getTag: {
       module: 'mall.ticket_index_page_svr',
       method: 'GetShowTypeList',
-      param: {}
-    }
+      param: {},
+    },
   };
-  
-  const params = Object.assign({
+
+  const params = {
     format: 'json',
     inCharset: 'utf8',
     outCharset: 'GB2312',
     platform: 'yqq.json',
-    data: JSON.stringify(data)
-  });
-  
-  const props = {
-    method: 'get',
-    params,
-    option: {}
+    data: JSON.stringify(data),
   };
-  
-  await UCommon(props)
-    .then(res => {
-      const response = res.data;
-      ctx.status = 200;
-      ctx.body = {
-        response
-      };
-    })
-    .catch(error => {
-      console.log('error', error);
-      ctx.status = 502;
-      ctx.body = {
-        error: error instanceof Error ? error.message : error
-      };
-    });
-};
 
-export default controller;
+  const props = { method: 'get', params, option: {} };
+
+  const res = await UCommon(props);
+  setApiResponse(ctx, { status: 200, body: { response: res.data } });
+});

@@ -1,19 +1,20 @@
+import type { Mock } from 'vitest';
 import cookieMiddleware from '../../../util/cookie';
 import type { UserInfo } from '../../../types/global';
 
 describe('util/cookie middleware', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
   let originalUserInfo: UserInfo;
 
   beforeEach(() => {
     mockCtx = {
       cookies: {
-        set: jest.fn()
+        set: vi.fn()
       },
       request: {}
     };
-    mockNext = jest.fn();
+    mockNext = vi.fn();
     originalUserInfo = global.userInfo;
     global.userInfo = {
       cookie: '',
@@ -22,7 +23,7 @@ describe('util/cookie middleware', () => {
       loginUin: '',
       refreshData: () => {}
     };
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

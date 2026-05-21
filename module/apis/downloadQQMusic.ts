@@ -19,11 +19,11 @@ export default ({ method = 'get', params = {}, option = {} }: DownloadOptions) =
 		headers: {
 			host: 'y.qq.com',
 			referer: 'https://y.qq.com/',
-			...(option.headers || {})
+			...option.headers
 		},
 		params: data
 	};
-	return request('/download/download.js', method as Method, options, 'y')
+	return request({ url: '/download/download.js', method: method as Method, options, isUUrl: 'y' })
 		.then(res => {
 			let response = res.data;
 			if (typeof response === 'string') {

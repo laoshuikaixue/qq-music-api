@@ -46,6 +46,6 @@ title: 使用指南
 - 默认端口 `3200`
 - 支持音乐、歌手、歌单、排行、搜索、评论等能力
 - 已提供 QQ 扫码登录二维码获取与登录状态轮询接口
-- 提供 [Jest 测试配置](https://github.com/sansenjian/qq-music-api/blob/main/jest.config.ts) 与 [`VitePress 2`](../index.md) 文档站点
+- 提供 [Vitest 测试配置](https://github.com/sansenjian/qq-music-api/blob/main/vitest.config.ts) 与 [`VitePress 2`](../index.md) 文档站点
 
 详细接口请查看 [API 文档](/api/)。

@@ -27,8 +27,7 @@ jobs:
         run: npm install --no-package-lock
 
       - name: Run linter
-        run: npm run eslint
-        continue-on-error: true
+        run: npm run lint
 
   test:
     runs-on: ubuntu-latest

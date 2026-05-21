@@ -71,7 +71,7 @@ const buildLoginSession = (cookie: string): LoginSession => {
   };
 };
 
-const checkQQLoginQr: ApiFunction = async ({ method = 'get', params = {}, option = {} }: ApiOptions): Promise<ApiResponse> => {
+const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise<ApiResponse> => {
   const { ptqrtoken, qrsig } = params;
   if (!ptqrtoken || !qrsig) {
     return errorResponse('参数错误', 400);

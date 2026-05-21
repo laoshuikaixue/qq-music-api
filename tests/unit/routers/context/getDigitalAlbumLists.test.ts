@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import getDigitalAlbumListsController from '../../../../routers/context/getDigitalAlbumLists';
 import { getDigitalAlbumLists } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getDigitalAlbumLists', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -13,12 +15,17 @@ describe('routers/context/getDigitalAlbumLists', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should call getDigitalAlbumLists with default props', async () => {
-    (getDigitalAlbumLists as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getDigitalAlbumLists as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getDigitalAlbumListsController(mockCtx, mockNext);
 
@@ -34,7 +41,7 @@ describe('routers/context/getDigitalAlbumLists', () => {
       status: 200,
       body: { code: 0, data: { albumLists: [] } }
     };
-    (getDigitalAlbumLists as jest.Mock).mockResolvedValue(mockResponse);
+    (getDigitalAlbumLists as Mock).mockResolvedValue(mockResponse);
 
     await getDigitalAlbumListsController(mockCtx, mockNext);
 
@@ -44,8 +51,12 @@ describe('routers/context/getDigitalAlbumLists', () => {
 
   test('should handle errors from getDigitalAlbumLists', async () => {
     const mockError = new Error('Digital album lists error');
-    (getDigitalAlbumLists as jest.Mock).mockRejectedValue(mockError);
+    (getDigitalAlbumLists as Mock).mockRejectedValue(mockError);
 
-    await expect(getDigitalAlbumListsController(mockCtx, mockNext)).rejects.toThrow('Digital album lists error');
+    await getDigitalAlbumListsController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(500);
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 });

@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import getLyricController from '../../../../routers/context/getLyric';
 import { getLyric } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getLyric', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -16,8 +18,13 @@ describe('routers/context/getLyric', () => {
       headers: {},
       request: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should return 400 when songmid is missing in both query and path', async () => {
@@ -33,7 +40,7 @@ describe('routers/context/getLyric', () => {
 
   test('should call getLyric with songmid param', async () => {
     mockCtx.query = { songmid: 'test123' };
-    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getLyric as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getLyricController(mockCtx, mockNext);
 
@@ -46,7 +53,7 @@ describe('routers/context/getLyric', () => {
 
   test('should use path param songmid when query is missing', async () => {
     mockCtx.params = { songmid: 'path-songmid' };
-    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getLyric as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getLyricController(mockCtx, mockNext);
 
@@ -57,7 +64,7 @@ describe('routers/context/getLyric', () => {
 
   test('should inject cookie header when cookie is provided in query', async () => {
     mockCtx.query = { songmid: 'test123', cookie: 'uin=o123; qqmusic_key=abc' };
-    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getLyric as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getLyricController(mockCtx, mockNext);
 
@@ -76,7 +83,7 @@ describe('routers/context/getLyric', () => {
       ...mockCtx.headers,
       cookie: 'uin=o456; qqmusic_key=xyz'
     };
-    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getLyric as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getLyricController(mockCtx, mockNext);
 
@@ -95,7 +102,7 @@ describe('routers/context/getLyric', () => {
       ...mockCtx.headers,
       cookie: 'uin=o789; qqmusic_key=header'
     };
-    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getLyric as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getLyricController(mockCtx, mockNext);
 
@@ -114,7 +121,7 @@ describe('routers/context/getLyric', () => {
       status: 200,
       body: { code: 0, data: { lyric: 'test lyric' } }
     };
-    (getLyric as jest.Mock).mockResolvedValue(mockResponse);
+    (getLyric as Mock).mockResolvedValue(mockResponse);
 
     await getLyricController(mockCtx, mockNext);
 
@@ -125,8 +132,12 @@ describe('routers/context/getLyric', () => {
   test('should handle errors from getLyric', async () => {
     mockCtx.query = { songmid: 'test123' };
     const mockError = new Error('Lyric error');
-    (getLyric as jest.Mock).mockRejectedValue(mockError);
+    (getLyric as Mock).mockRejectedValue(mockError);
 
-    await expect(getLyricController(mockCtx, mockNext)).rejects.toThrow('Lyric error');
+    await getLyricController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'Lyric error' });
   });
 });

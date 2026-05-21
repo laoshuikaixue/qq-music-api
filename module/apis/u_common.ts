@@ -12,13 +12,13 @@ export default ({ options = {}, method = 'get', customCookie }: UCommonOptions) 
 	const opts: AxiosRequestConfig = { ...options };
 
 	// Merge commonParams into params for query string
-	opts.params = { ...config.commonParams, ...(opts.params || {}) };
+	opts.params = { ...config.getCommonParams(), ...opts.params };
 
 	opts.headers = {
 		referer: 'https://y.qq.com/portal/player.html',
 		host: 'u.y.qq.com',
 		'content-type': 'application/x-www-form-urlencoded',
-		...(opts.headers || {})
+		...opts.headers
 	};
 
 	if (process.env.DEBUG === 'true') {

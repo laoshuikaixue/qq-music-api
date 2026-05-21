@@ -1,19 +1,20 @@
+import type { Mock } from 'vitest';
 import getHotKey from '../../../module/apis/search/getHotKey';
 import { handleApi } from '../../../util/apiResponse';
 import y_common from '../../../module/apis/y_common';
 
-jest.mock('../../../util/apiResponse');
-jest.mock('../../../module/apis/y_common');
+vi.mock('../../../util/apiResponse');
+vi.mock('../../../module/apis/y_common');
 
 describe('module/apis/search/getHotKey', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (y_common as jest.Mock).mockResolvedValue({ data: { hotkeys: [] } });
+    vi.clearAllMocks();
+    (y_common as Mock).mockResolvedValue({ data: { hotkeys: [] } });
   });
 
   it('should call handleApi and return search payload', async () => {
     const mockResult = { data: { hotkeys: [{ k: 'test' }] } };
-    (handleApi as jest.Mock).mockResolvedValue(mockResult);
+    (handleApi as Mock).mockResolvedValue(mockResult);
 
     const result = await getHotKey({});
 
@@ -35,7 +36,7 @@ describe('module/apis/search/getHotKey', () => {
 
   it('should reject when handleApi rejects', async () => {
     const mockError = new Error('search failed');
-    (handleApi as jest.Mock).mockRejectedValue(mockError);
+    (handleApi as Mock).mockRejectedValue(mockError);
 
     await expect(getHotKey({})).rejects.toThrow('search failed');
   });

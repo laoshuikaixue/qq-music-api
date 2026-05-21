@@ -1,41 +1,23 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { getSingerMv } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
-const controller: Controller = async (ctx, next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const { singermid, order, num = 5 } = ctx.query;
-  
-  const orderStr = Array.isArray(order) ? order[0] : order;
-  
-  let params: Record<string, any> = Object.assign({
-    singermid,
-    order: orderStr,
-    num
-  });
-  
-  if (orderStr && orderStr.toLowerCase() === 'time') {
-    params = Object.assign(params, {
-      cmd: 1
-    });
-  }
-  
-  const props = {
-    method: 'get',
-    params,
-    option: {}
-  };
-  
-  if (singermid) {
-    const { status, body } = await getSingerMv(props);
-    Object.assign(ctx, {
-      status,
-      body
-    });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      response: 'no singermid'
-    };
-  }
-};
 
-export default controller;
+  if (!singermid) {
+    setApiResponse(ctx, { status: 400, body: { response: 'no singermid' } });
+    return;
+  }
+
+  const orderStr = Array.isArray(order) ? order[0] : order;
+  const params: Record<string, any> = { singermid, order: orderStr, num };
+
+  if (orderStr && orderStr.toLowerCase() === 'time') {
+    params.cmd = 1;
+  }
+
+  const props = { method: 'get', params, option: {} };
+  const result = await getSingerMv(props);
+  setApiResponse(ctx, result);
+});

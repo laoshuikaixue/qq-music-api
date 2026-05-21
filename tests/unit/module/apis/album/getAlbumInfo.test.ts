@@ -1,14 +1,15 @@
+import type { Mock } from 'vitest';
 import getAlbumInfo from '../../../../../module/apis/album/getAlbumInfo';
 import y_common from '../../../../../module/apis/y_common';
 import { handleApi } from '../../../../../util/apiResponse';
 
-jest.mock('../../../../../module/apis/y_common');
-jest.mock('../../../../../util/apiResponse');
+vi.mock('../../../../../module/apis/y_common');
+vi.mock('../../../../../util/apiResponse');
 
 describe('module/apis/album/getAlbumInfo', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (handleApi as jest.Mock).mockImplementation((promise) => promise);
+    vi.clearAllMocks();
+    (handleApi as Mock).mockImplementation((promise) => promise);
   });
 
   test('should be a function', () => {
@@ -16,7 +17,7 @@ describe('module/apis/album/getAlbumInfo', () => {
   });
 
   test('should call y_common with correct URL', async () => {
-    (y_common as jest.Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
 
     await getAlbumInfo({ method: 'get', params: {}, option: {} });
 
@@ -28,7 +29,7 @@ describe('module/apis/album/getAlbumInfo', () => {
   });
 
   test('should use default method get when not provided', async () => {
-    (y_common as jest.Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
 
     await getAlbumInfo({ params: {}, option: {} });
 
@@ -40,7 +41,7 @@ describe('module/apis/album/getAlbumInfo', () => {
   });
 
   test('should pass albummid param to y_common', async () => {
-    (y_common as jest.Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
 
     await getAlbumInfo({
       method: 'get',
@@ -60,7 +61,7 @@ describe('module/apis/album/getAlbumInfo', () => {
   });
 
   test('should add format and outCharset to params', async () => {
-    (y_common as jest.Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
 
     await getAlbumInfo({
       method: 'get',
@@ -68,7 +69,7 @@ describe('module/apis/album/getAlbumInfo', () => {
       option: {}
     });
 
-    const callArgs = (y_common as jest.Mock).mock.calls[0][0];
+    const callArgs = (y_common as Mock).mock.calls[0][0];
     expect(callArgs.options.params).toMatchObject({
       albummid: 'test123',
       format: 'json',
@@ -77,7 +78,7 @@ describe('module/apis/album/getAlbumInfo', () => {
   });
 
   test('should merge custom options', async () => {
-    (y_common as jest.Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
     const customOption = { timeout: 5000 };
 
     await getAlbumInfo({
@@ -86,7 +87,7 @@ describe('module/apis/album/getAlbumInfo', () => {
       option: customOption
     });
 
-    const callArgs = (y_common as jest.Mock).mock.calls[0][0];
+    const callArgs = (y_common as Mock).mock.calls[0][0];
     expect(callArgs.options).toMatchObject({
       timeout: 5000,
       params: expect.any(Object)
@@ -95,8 +96,8 @@ describe('module/apis/album/getAlbumInfo', () => {
 
   test('should call handleApi with y_common promise', async () => {
     const mockResponse = { data: { code: 0, data: { album: {} } } };
-    (y_common as jest.Mock).mockResolvedValue(mockResponse);
-    (handleApi as jest.Mock).mockResolvedValue({ status: 200, body: mockResponse });
+    (y_common as Mock).mockResolvedValue(mockResponse);
+    (handleApi as Mock).mockResolvedValue({ status: 200, body: mockResponse });
 
     const result = await getAlbumInfo({ method: 'get', params: {}, option: {} });
 
@@ -105,11 +106,11 @@ describe('module/apis/album/getAlbumInfo', () => {
   });
 
   test('should handle empty params', async () => {
-    (y_common as jest.Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
 
     await getAlbumInfo({ method: 'get', params: {}, option: {} });
 
-    const callArgs = (y_common as jest.Mock).mock.calls[0][0];
+    const callArgs = (y_common as Mock).mock.calls[0][0];
     expect(callArgs.options.params).toMatchObject({
       format: 'json',
       outCharset: 'utf-8'

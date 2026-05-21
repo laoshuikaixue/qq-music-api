@@ -1,18 +1,4 @@
-import { KoaContext, Controller } from '../types';
+import { createController } from '../util';
 import { getMvByTag } from '../../module';
 
-const controller: Controller = async (ctx, next) => {
-  const props = {
-    method: 'get',
-    params: {},
-    option: {}
-  };
-  
-  const { status, body } = await getMvByTag(props);
-  Object.assign(ctx, {
-    status,
-    body
-  });
-};
-
-export default controller;
+export default createController(getMvByTag);

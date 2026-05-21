@@ -1,27 +1,21 @@
-import { Context, Next } from 'koa';
+import { KoaContext } from '../types';
 import { getSmartbox } from '../../module';
-import type { ApiResponse } from '../../types/api';
+import { setApiResponse, withErrorHandler } from '../util';
 
-export default async (ctx: Context, next: Next) => {
-	const { key } = ctx.query;
-	const props = {
-		method: 'get',
-		params: {
-			key
-		},
-		option: {}
-	};
-	if (key) {
-		const result = await getSmartbox(props) as ApiResponse;
-		const { status, body } = result;
-		Object.assign(ctx, {
-			status,
-			body
-		});
-	} else {
-		ctx.status = 200;
-		ctx.body = {
-			response: null
-		};
-	}
-};
+export default withErrorHandler(async (ctx: KoaContext) => {
+  const { key } = ctx.query;
+
+  if (!key) {
+    setApiResponse(ctx, { status: 200, body: { response: null } });
+    return;
+  }
+
+  const props = {
+    method: 'get',
+    params: { key },
+    option: {},
+  };
+
+  const result = await getSmartbox(props);
+  setApiResponse(ctx, result);
+});

@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import getRecommendController from '../../../../routers/context/getRecommend';
 import { UCommon } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getRecommend', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
-  let consoleLogSpy: jest.SpyInstance;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -14,17 +15,17 @@ describe('routers/context/getRecommend', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   test('should call UCommon with correct data structure', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
@@ -40,7 +41,7 @@ describe('routers/context/getRecommend', () => {
 
   test('should set response on successful API call', async () => {
     const mockResponse = { code: 0, data: { playlists: [] } };
-    (UCommon as jest.Mock).mockResolvedValue({ data: mockResponse });
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
 
     await getRecommendController(mockCtx, mockNext);
 
@@ -51,33 +52,33 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should handle API errors gracefully', async () => {
-    (UCommon as jest.Mock).mockRejectedValueOnce(new Error('API error'));
+    (UCommon as Mock).mockRejectedValueOnce(new Error('API error'));
 
     await getRecommendController(mockCtx, mockNext);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('error', expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
     expect(mockCtx.status).toBe(502);
     expect(mockCtx.body).toEqual({ error: 'API error' });
   });
 
   test('should handle non-Error rejections and return raw error value', async () => {
-    (UCommon as jest.Mock).mockRejectedValueOnce('Non-error rejection');
+    (UCommon as Mock).mockRejectedValueOnce('Non-error rejection');
 
     await getRecommendController(mockCtx, mockNext);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('error', 'Non-error rejection');
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', 'Non-error rejection');
     expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: 'Non-error rejection' });
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 
   test('should construct correct data structure with all modules', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam).toHaveProperty('comm');
     expect(dataParam).toHaveProperty('category');
     expect(dataParam).toHaveProperty('recomPlaylist');
@@ -90,26 +91,26 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should have correct comm structure', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.comm).toEqual({
       ct: 24
     });
   });
 
   test('should have correct category module config', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.category).toMatchObject({
       method: 'get_hot_category',
       param: {
@@ -120,13 +121,13 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should have correct recomPlaylist module config', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.recomPlaylist).toMatchObject({
       method: 'get_hot_recommend',
       param: {
@@ -138,13 +139,13 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should have correct playlist module config', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.playlist).toMatchObject({
       method: 'get_playlist_by_category',
       param: {
@@ -159,13 +160,13 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should have correct new_song module config', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.new_song).toMatchObject({
       module: 'newsong.NewSongServer',
       method: 'get_new_song_info',
@@ -176,13 +177,13 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should have correct new_album module config', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRecommendController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.new_album).toMatchObject({
       module: 'newalbum.NewAlbumServer',
       method: 'get_new_album_info',

@@ -1,4 +1,4 @@
-import { commonParams } from '../../config'
+import { getCommonParams } from '../../config'
 import uCommon from '../u_common'
 import { handleApi } from '../../../util/apiResponse'
 
@@ -9,7 +9,7 @@ import { handleApi } from '../../../util/apiResponse'
 export async function getPlaylistTags() {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },
@@ -43,7 +43,7 @@ export async function getPlaylistTags() {
 export async function getPlaylistsByTag(tagId: number = 1, page: number = 0, num: number = 20) {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },
@@ -86,7 +86,7 @@ export async function getPlaylistsByTag(tagId: number = 1, page: number = 0, num
 export async function getHotComments(id: string, type: number = 1, page: number = 0, pagesize: number = 20) {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },
@@ -134,7 +134,7 @@ export async function getSingerListByArea(
 ) {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },

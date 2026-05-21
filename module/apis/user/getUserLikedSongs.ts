@@ -2,10 +2,6 @@ import request from '../../../util/request';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
 import type { ApiResponse } from '../../../types/api';
 
-interface LikedSong {
-  [key: string]: unknown;
-}
-
 const DEBUG_ENABLED = process.env.DEBUG === 'true';
 
 const debugLog = (message: string, payload?: unknown) => {

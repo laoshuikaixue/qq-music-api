@@ -49,8 +49,7 @@ jobs:
           CI: true
 
       - name: Run linter
-        run: npm run eslint
-        continue-on-error: true # ESLint 错误不阻止发布，但会警告
+        run: npm run lint
 
       - name: Build TypeScript
         run: npm run build

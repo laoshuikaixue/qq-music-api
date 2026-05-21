@@ -1,30 +1,18 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { songLists } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
-const controller: Controller = async (ctx, next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const { limit = 20, page = 0, sortId = 5, categoryId = 10000000 } = ctx.query;
-  
   const sin = +page * +limit;
   const ein = +limit * (+page + 1) - 1;
-  
-  const params = Object.assign({
-    categoryId,
-    sortId,
-    sin,
-    ein
-  });
-  
+
   const props = {
     method: 'get',
-    params,
-    option: {}
+    params: { categoryId, sortId, sin, ein },
+    option: {},
   };
-  
-  const { status, body } = await songLists(props);
-  Object.assign(ctx, {
-    status,
-    body
-  });
-};
 
-export default controller;
+  const result = await songLists(props);
+  setApiResponse(ctx, result);
+});

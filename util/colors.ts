@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { styleText } from 'node:util';
 
 type ColorFunction = (text: string) => string;
 
@@ -16,16 +16,16 @@ interface Colors {
 }
 
 const colors: Colors = {
-	silly: (text: string) => chalk.hex('#ff69b4')(text),
-	input: (text: string) => chalk.grey(text),
-	verbose: (text: string) => chalk.cyan(text),
-	prompt: (text: string) => chalk.white(text),
-	info: (text: string) => chalk.green(text),
-	data: (text: string) => chalk.grey(text),
-	help: (text: string) => chalk.cyan(text),
-	warn: (text: string) => chalk.yellow(text),
-	debug: (text: string) => chalk.blue(text),
-	error: (text: string) => chalk.red(text)
+	silly: (text: string) => styleText('magenta', text),
+	input: (text: string) => styleText('gray', text),
+	verbose: (text: string) => styleText('cyan', text),
+	prompt: (text: string) => styleText('white', text),
+	info: (text: string) => styleText('green', text),
+	data: (text: string) => styleText('gray', text),
+	help: (text: string) => styleText('cyan', text),
+	warn: (text: string) => styleText('yellow', text),
+	debug: (text: string) => styleText('blue', text),
+	error: (text: string) => styleText('red', text)
 };
 
 export default colors;

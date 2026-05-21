@@ -1,7 +1,7 @@
-import { KoaContext, Controller } from '../types';
+import { Controller } from '../types';
 import { checkQQLoginQr } from '../../module';
 
-const controller: Controller = async (ctx, next) => {
+const controller: Controller = async (ctx, _next) => {
 	const { ptqrtoken, qrsig } = ctx.query.ptqrtoken ? ctx.query : ctx.request.body || {};
 
 	const params = { ptqrtoken, qrsig };

@@ -12,32 +12,33 @@ export default ({ method = 'get', params = {}, option = {} }: GetSmartboxOptions
 		...params,
 		format: 'json',
 		outCharset: 'utf-8',
-		is_xml: 0
+		is_xml: 0,
 	};
 	const options: AxiosRequestConfig = {
 		...option,
-		params: data
+		params: data,
 	};
 	return y_common({
 		url: '/splcloud/fcgi-bin/smartbox_new.fcg',
 		method: method as Method,
-		options
+		options,
 	})
 		.then(res => {
 			const response = res.data;
 			return {
 				status: 200,
 				body: {
-					response
-				}
+					response,
+				},
 			};
 		})
 		.catch(error => {
 			console.log('error', error);
 			return {
+				status: 500,
 				body: {
-					error
-				}
+					error,
+				},
 			};
 		});
 };

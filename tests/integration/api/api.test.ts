@@ -546,7 +546,7 @@ describe('API Integration Tests', () => {
 			const response = await request(callback).get('/user/getUserPlaylists').query({ uin: '123456789' }).expect(502);
 
 			expectErrorResponse(response.body);
-			expect(response.body.error).toBe('用户歌单响应中未找到歌单列表字段');
+			expect(response.body.error).toBe('服务器内部错误');
 		});
 	});
 
@@ -883,7 +883,7 @@ describe('API Integration Tests', () => {
 				.send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
 				.expect(502);
 
-			expect(response.body.error).toBe('Failed to extract checkSigUrl from response');
+			expect(response.body.error).toBe('登录检查失败');
 		});
 
 		test('POST /checkQQLoginQr should return 502 when p_skey is missing', async () => {
@@ -910,7 +910,7 @@ describe('API Integration Tests', () => {
 				.send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
 				.expect(502);
 
-			expect(response.body.error).toBe('Failed to extract p_skey from response');
+			expect(response.body.error).toBe('登录检查失败');
 		});
 
 		test('POST /checkQQLoginQr should return 502 when authorize response does not redirect', async () => {
@@ -945,7 +945,7 @@ describe('API Integration Tests', () => {
 				.send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
 				.expect(502);
 
-			expect(response.body.error).toBe('授权响应异常，未返回跳转地址');
+			expect(response.body.error).toBe('登录检查失败');
 		});
 
 		test('POST /checkQQLoginQr should return 502 when authorize redirect location misses code', async () => {
@@ -980,7 +980,7 @@ describe('API Integration Tests', () => {
 				.send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
 				.expect(502);
 
-			expect(response.body.error).toBe('授权响应中未找到 code 参数');
+			expect(response.body.error).toBe('登录检查失败');
 		});
 
 		test('POST /checkQQLoginQr should return 504 and 登录检查超时 on fetch timeout', async () => {

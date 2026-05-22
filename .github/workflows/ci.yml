@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Setup npm 11
+        run: bash .github/scripts/setup-npm.sh 11.14.1
+
       - run: npm install --no-package-lock
 
       - name: Lint (oxlint)

@@ -1,0 +1,83 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const importFresh = async <T>(modulePath: string): Promise<T> => {
+	vi.resetModules();
+	return import(modulePath) as Promise<T>;
+};
+
+describe('config modules', () => {
+	let originalConfigDir: string | undefined;
+	let originalCwd: string;
+
+	beforeEach(() => {
+		originalConfigDir = process.env.QQ_MUSIC_API_CONFIG_DIR;
+		originalCwd = process.cwd();
+	});
+
+	afterEach(() => {
+		if (originalConfigDir === undefined) {
+			delete process.env.QQ_MUSIC_API_CONFIG_DIR;
+		} else {
+			process.env.QQ_MUSIC_API_CONFIG_DIR = originalConfigDir;
+		}
+		process.chdir(originalCwd);
+	});
+
+	test('default config path is stable and does not follow process cwd', async () => {
+		delete process.env.QQ_MUSIC_API_CONFIG_DIR;
+		const first = await importFresh<typeof import('../../../config/config-path')>('../../../config/config-path');
+		const firstConfigDir = first.getConfigDir();
+
+		const tempCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'qq-music-api-cwd-'));
+		process.chdir(tempCwd);
+
+		const second = await importFresh<typeof import('../../../config/config-path')>('../../../config/config-path');
+		expect(second.getConfigDir()).toBe(firstConfigDir);
+		expect(firstConfigDir).toBe(path.join(originalCwd, 'config'));
+	});
+
+	test('default config path resolves back to the package config directory from built entries', async () => {
+		const { resolveDefaultConfigDir } =
+			await importFresh<typeof import('../../../config/config-path')>('../../../config/config-path');
+
+		expect(resolveDefaultConfigDir(path.join(originalCwd, 'dist'))).toBe(path.join(originalCwd, 'config'));
+		expect(resolveDefaultConfigDir(path.join(originalCwd, 'dist', 'config'))).toBe(path.join(originalCwd, 'config'));
+		expect(resolveDefaultConfigDir(path.join(originalCwd, 'config'))).toBe(path.join(originalCwd, 'config'));
+	});
+
+	test('service config import does not create config files', async () => {
+		const configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qq-music-api-config-'));
+		fs.rmSync(configDir, { recursive: true, force: true });
+		process.env.QQ_MUSIC_API_CONFIG_DIR = configDir;
+
+		await importFresh<typeof import('../../../config/service-config')>('../../../config/service-config');
+
+		expect(fs.existsSync(configDir)).toBe(false);
+	});
+
+	test('user info import does not create config files', async () => {
+		const configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qq-music-api-config-'));
+		fs.rmSync(configDir, { recursive: true, force: true });
+		process.env.QQ_MUSIC_API_CONFIG_DIR = configDir;
+
+		await importFresh<typeof import('../../../config/user-info')>('../../../config/user-info');
+
+		expect(fs.existsSync(configDir)).toBe(false);
+	});
+
+	test('refreshData creates the explicit config directory when persisting login state', async () => {
+		const configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qq-music-api-config-'));
+		fs.rmSync(configDir, { recursive: true, force: true });
+		process.env.QQ_MUSIC_API_CONFIG_DIR = configDir;
+
+		const { default: userInfo } = await importFresh<typeof import('../../../config/user-info')>('../../../config/user-info');
+		userInfo.refreshData('uin=o123; qqmusic_key=abc');
+
+		expect(JSON.parse(fs.readFileSync(path.join(configDir, 'user-info.json'), 'utf-8'))).toEqual({
+			loginUin: 'o123',
+			cookie: 'uin=o123; qqmusic_key=abc',
+		});
+	});
+});

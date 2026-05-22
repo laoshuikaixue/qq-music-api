@@ -1,6 +1,7 @@
 {
 	"name": "@sansenjian/qq-music-api",
 	"version": "2.3.1",
+	"packageManager": "npm@11.14.1",
 	"publishConfig": {
 		"access": "public"
 	},
@@ -65,7 +66,7 @@
 		"docs:dev": "vitepress dev docs --port 9611",
 		"docs:preview": "vitepress preview docs",
 		"commit-push": "./scripts/commit-push.sh",
-		"changelog": "conventional-changelog -p angular -i CHANGELOG.md -o CHANGELOG.md -r 1",
+		"changelog": "node scripts/generate-changelog.js",
 		"version": "npm run changelog && git add CHANGELOG.md",
 		"release": "npm version patch",
 		"lint": "oxlint",
@@ -98,16 +99,15 @@
 		"koa": "^2.16.4"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^18.0.0",
-		"@commitlint/config-conventional": "^18.0.0",
+		"@commitlint/cli": "^20.5.3",
+		"@commitlint/config-conventional": "^20.5.3",
 		"@types/koa": "^3.0.1",
 		"@types/koa__router": "^12.0.5",
 		"@types/node": "^25.3.3",
 		"@types/supertest": "^7.2.0",
 		"@vitest/coverage-v8": "^4.1.6",
-		"conventional-changelog": "^7.2.0",
 		"husky": "^9.0.0",
-		"lint-staged": "^15.0.0",
+		"lint-staged": "^16.4.0",
 		"nodemon": "^3.1.14",
 		"oxc-transform": "^0.132.0",
 		"oxlint": "^1.65.0",
@@ -121,7 +121,20 @@
 		"vitest": "^4.1.6",
 		"vue": "^3.5.29"
 	},
+	"overrides": {
+		"anymatch": {
+			"picomatch": "^2.3.2"
+		},
+		"brace-expansion": "^5.0.6",
+		"fast-uri": "^3.1.2",
+		"lodash": "^4.18.1",
+		"readdirp": {
+			"picomatch": "^2.3.2"
+		},
+		"yaml": "^2.9.0"
+	},
 	"engines": {
-		"node": ">=20.12.0"
+		"node": "^20.17.0 || >=22.9.0",
+		"npm": "^11.0.0"
 	}
 }

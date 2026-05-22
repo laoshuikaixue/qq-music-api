@@ -79,7 +79,7 @@ describe('util/apiResponse', () => {
       await expect(handleApi(Promise.reject(error))).resolves.toEqual({
         status: 500,
         body: {
-          error,
+          error: '服务器内部错误',
         },
       });
 

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { getConfigDir, resolveConfigPath } from './config-path';
 
 interface UserInfo {
 	loginUin: string;
@@ -15,15 +16,11 @@ let userInfo: UserInfo = { loginUin: '', cookie: '', cookieList: [], cookieObjec
 let cookieList: string[] = [];
 let cookieObject: Record<string, string> = {};
 
-const configDir = process.env.QQ_MUSIC_API_CONFIG_DIR
-	? path.resolve(process.env.QQ_MUSIC_API_CONFIG_DIR)
-	: path.resolve(process.cwd(), 'config');
-const infoPath = path.join(configDir, 'user-info.json');
+const infoPath = resolveConfigPath('user-info.json');
 
-fs.mkdirSync(configDir, { recursive: true });
-if (!fs.existsSync(infoPath)) {
-	fs.writeFileSync(infoPath, '{}', 'utf-8');
-}
+const ensureConfigDir = () => {
+	fs.mkdirSync(path.dirname(infoPath), { recursive: true });
+};
 
 const initData = () => {
 	try {
@@ -50,8 +47,9 @@ const initData = () => {
 };
 
 const refreshData = (cookie: string) => {
-	const uinMatch = cookie.match(/ uin=([^;]+)/);
+	const uinMatch = cookie.match(/(?:^|;\s*)uin=([^;]+)/);
 	const uin = uinMatch ? uinMatch[1] : '';
+	ensureConfigDir();
 	fs.writeFileSync(infoPath, JSON.stringify({ loginUin: uin, cookie }), 'utf-8');
 	initData();
 	return {
@@ -73,4 +71,5 @@ const exportObj: UserInfo = {
 	refreshData,
 };
 
+export { getConfigDir };
 export default exportObj as UserInfo;

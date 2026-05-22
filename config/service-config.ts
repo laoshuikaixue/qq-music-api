@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import { resolveConfigPath } from './config-path';
 
 interface ServiceConfig {
 	/** 是否启用降级模式（不强制要求 Cookie） */
@@ -10,12 +10,7 @@ interface ServiceConfig {
 	cookieParamName: string;
 }
 
-const configDir = process.env.QQ_MUSIC_API_CONFIG_DIR
-	? path.resolve(process.env.QQ_MUSIC_API_CONFIG_DIR)
-	: path.resolve(process.cwd(), 'config');
-const configPath = path.join(configDir, 'service-config.json');
-
-fs.mkdirSync(configDir, { recursive: true });
+const configPath = resolveConfigPath('service-config.json');
 
 // 创建默认配置
 const defaultConfig: ServiceConfig = {
@@ -33,10 +28,7 @@ if (fs.existsSync(configPath)) {
 		config = { ...defaultConfig, ...JSON.parse(content) };
 	} catch {
 		console.warn('service-config.json 读取失败，使用默认配置');
-		fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2), 'utf-8');
 	}
-} else {
-	fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2), 'utf-8');
 }
 
 // 支持环境变量覆盖

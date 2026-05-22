@@ -58,17 +58,17 @@ describe('routers/context/getRecommend', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
     expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: 'API error' });
+    expect(mockCtx.body).toEqual({ error: '上游服务异常' });
   });
 
-  test('should handle non-Error rejections and return raw error value', async () => {
+  test('should handle non-Error rejections with a generic upstream error', async () => {
     (UCommon as Mock).mockRejectedValueOnce('Non-error rejection');
 
     await getRecommendController(mockCtx, mockNext);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', 'Non-error rejection');
     expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
+    expect(mockCtx.body).toEqual({ error: '上游服务异常' });
   });
 
   test('should construct correct data structure with all modules', async () => {

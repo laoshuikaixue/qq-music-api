@@ -157,7 +157,7 @@ describe('routers/context/getMv', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
     expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: 'API error' });
+    expect(mockCtx.body).toEqual({ error: '上游服务异常' });
   });
 
   test('should have correct data structure', async () => {

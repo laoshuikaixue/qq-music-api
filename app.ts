@@ -1,4 +1,5 @@
 import { styleText } from 'node:util';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import colors from './util/colors';
@@ -9,9 +10,17 @@ import app from './koaApp';
 const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
 const PORT: number = Number.isFinite(parsedPort) ? parsedPort : 3200;
 
+const resolveRealPath = (filePath: string): string => {
+	try {
+		return fs.realpathSync.native(filePath);
+	} catch {
+		return path.resolve(filePath);
+	}
+};
+
 // Service info (only when run directly, not imported as library)
-const entryFile = process.argv[1] ? path.resolve(process.argv[1]) : '';
-const currentFile = path.resolve(fileURLToPath(import.meta.url));
+const entryFile = process.argv[1] ? resolveRealPath(process.argv[1]) : '';
+const currentFile = resolveRealPath(fileURLToPath(import.meta.url));
 if (entryFile === currentFile) {
 	console.log(styleText('green', '\n🎵 QQ Music API Service Starting...\n'));
 	console.log(colors.info(`Current Version: ${pkg.version}`));

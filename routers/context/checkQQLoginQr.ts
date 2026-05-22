@@ -1,5 +1,6 @@
 import { Controller } from '../types';
 import { checkQQLoginQr } from '../../module';
+import { setApiResponse } from '../util';
 
 const controller: Controller = async (ctx, _next) => {
 	const { ptqrtoken, qrsig } = ctx.query.ptqrtoken ? ctx.query : ctx.request.body || {};
@@ -8,12 +9,11 @@ const controller: Controller = async (ctx, _next) => {
 	const props = {
 		method: 'get',
 		option: {},
-		params
+		params,
 	};
 
 	const { status, body } = await checkQQLoginQr(props);
-	ctx.status = status || 500;
-	ctx.body = body;
+	setApiResponse(ctx, { status: status || 500, body });
 };
 
 export default controller;

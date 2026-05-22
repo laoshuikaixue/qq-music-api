@@ -27,6 +27,10 @@ jobs:
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org/'
+          package-manager-cache: false
+
+      - name: Setup npm 11
+        run: bash .github/scripts/setup-npm.sh 11.14.1
 
       - name: Determine version to publish
         id: version
@@ -70,6 +74,10 @@ jobs:
         with:
           node-version: 24
           registry-url: 'https://npm.pkg.github.com'
+          package-manager-cache: false
+
+      - name: Setup npm 11 for GitHub Packages
+        run: bash .github/scripts/setup-npm.sh 11.14.1
 
       - name: Publish to GitHub Packages
         run: npm publish --access public

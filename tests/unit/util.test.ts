@@ -71,7 +71,7 @@ describe('util/apiResponse', () => {
 
   it('handleApi 应在测试环境下捕获错误且不打印日志', async () => {
     const error = new Error('test failure');
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const previousEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'test';
 
@@ -79,7 +79,7 @@ describe('util/apiResponse', () => {
       await expect(handleApi(Promise.reject(error))).resolves.toEqual({
         status: 500,
         body: {
-          error,
+          error: '服务器内部错误',
         },
       });
 
@@ -92,7 +92,7 @@ describe('util/apiResponse', () => {
 
   it('handleApi 应在非测试环境下按默认行为打印日志', async () => {
     const error = new Error('prod failure');
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const previousEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
@@ -107,7 +107,7 @@ describe('util/apiResponse', () => {
 
   it('handleApi 在 logError=false 时应跳过日志输出', async () => {
     const error = new Error('silent failure');
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const previousEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
@@ -133,7 +133,7 @@ describe('util/loginUtils', () => {
   });
 
   it('getGuid 应生成符合 UUID v4 形状的大写字符串', () => {
-    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
 
     try {
       const guid = getGuid();

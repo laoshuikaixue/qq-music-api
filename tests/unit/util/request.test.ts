@@ -1,16 +1,21 @@
-const mockService = jest.fn();
-const mockInterceptors = {
-  request: { use: jest.fn() },
-  response: { use: jest.fn() }
-};
-(mockService as jest.Mock & { interceptors: typeof mockInterceptors }).interceptors = mockInterceptors;
+import type { Mock } from 'vitest';
 
-jest.mock('axios', () => ({
+const { mockService, mockInterceptors } = vi.hoisted(() => {
+  const mockService = vi.fn();
+  const mockInterceptors = {
+    request: { use: vi.fn() },
+    response: { use: vi.fn() }
+  };
+  (mockService as Mock & { interceptors: typeof mockInterceptors }).interceptors = mockInterceptors;
+  return { mockService, mockInterceptors };
+});
+
+vi.mock('axios', () => ({
   __esModule: true,
   default: {
-    create: jest.fn(() => mockService)
+    create: vi.fn(() => mockService)
   },
-  create: jest.fn(() => mockService)
+  create: vi.fn(() => mockService)
 }));
 
 import type { AxiosRequestConfig } from 'axios';
@@ -34,7 +39,7 @@ describe('request util', () => {
 
   const getLastConfig = (): AxiosRequestConfig => {
     expect(mockService).toHaveBeenCalled();
-    const calls = mockService.mock.calls;
+    const calls = (mockService as Mock).mock.calls;
     return calls[calls.length - 1]?.[0] as AxiosRequestConfig;
   };
 
@@ -48,7 +53,7 @@ describe('request util', () => {
   };
 
   test('should use c.y.qq.com as default base URL', async () => {
-    await request('/test-path');
+    await request({ url: '/test-path' });
 
     expect(getLastConfig().url).toBe('https://c.y.qq.com/test-path');
   });
@@ -72,7 +77,7 @@ describe('request util', () => {
   });
 
   test('should fallback to c.y.qq.com for unknown base type', async () => {
-    await request('/fallback-path', 'GET', undefined, 'c');
+    await request({ url: '/fallback-path', method: 'GET' });
 
     expect(getLastConfig().url).toBe('https://c.y.qq.com/fallback-path');
   });
@@ -97,8 +102,8 @@ describe('request util', () => {
     expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBe('k=v');
   });
 
-  test('should inject Cookie header from customCookie argument in legacy signature', async () => {
-    await request('/cookie-test', 'GET', { headers: {} }, 'c', 'k=v');
+  test('should inject Cookie header from RequestConfig.cookie', async () => {
+    await request({ url: '/cookie-test', method: 'GET', options: { headers: {} }, cookie: 'k=v' });
 
     expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBe('k=v');
   });

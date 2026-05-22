@@ -1,4 +1,4 @@
-import { commonParams } from '../../config'
+import { getCommonParams } from '../../config'
 import uCommon from '../u_common'
 import { handleApi } from '../../../util/apiResponse'
 
@@ -18,7 +18,7 @@ function normalizeNewSongType(areaId: number) {
 export async function getDailyRecommend(cookie?: string) {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },
@@ -56,7 +56,7 @@ export async function getDailyRecommend(cookie?: string) {
 export async function getPrivateFM(cookie?: string) {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },
@@ -98,7 +98,7 @@ export async function getNewSongs(areaId: number = DEFAULT_NEW_SONG_TYPE, limit:
 
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },

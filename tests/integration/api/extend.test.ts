@@ -1,74 +1,50 @@
 // 扩展功能 API 测试
 
+import type { Mock } from 'vitest';
 import request from 'supertest';
 import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import router from '../../../routers/router';
-import cors from '../../../middlewares/koa-cors';
-import type { UserInfo } from '../../../types/global';
+import { createTestApp, createTestUserInfo } from '../../../tests/setup/testUtils';
 
-// Mock axios 模块
-jest.mock('axios', () => {
-  const mockFn = jest.fn().mockResolvedValue({ data: { code: 0, data: {} } });
-  (mockFn as jest.Mock & { interceptors: object }).interceptors = {
-    request: { use: jest.fn() },
-    response: { use: jest.fn() }
+const { mockFn: _mockFn } = vi.hoisted(() => {
+  const mockFn = vi.fn().mockResolvedValue({ data: { code: 0, data: {} } });
+  (mockFn as Mock & { interceptors: object }).interceptors = {
+    request: { use: vi.fn() },
+    response: { use: vi.fn() }
   };
-  return {
-    get: mockFn,
-    post: mockFn,
-    create: jest.fn(() => mockFn),
-    defaults: {
-      withCredentials: true,
-      timeout: 10000,
-      headers: { post: {} },
-      responseType: 'json'
-    }
-  };
+  return { mockFn };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const axios = require('axios');
-
-interface AnyMiddleware {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (ctx: any, next: () => Promise<unknown>): Promise<void>;
-}
-
-function createTestApp(): Koa {
-  const app = new Koa();
-  app.use(cors() as AnyMiddleware);
-  app.use(bodyParser() as AnyMiddleware);
-  app.use(router.routes());
-  app.use(router.allowedMethods());
-  return app;
-}
-
-function createTestUserInfo(): UserInfo {
-  return {
-    loginUin: '123456',
-    cookie: 'test_cookie=123',
-    cookieList: ['test_cookie=123'],
-    cookieObject: { test_cookie: '123' },
-    refreshData: () => {}
-  };
-}
+// Mock axios 模块
+vi.mock('axios', () => ({
+  default: {
+    get: _mockFn,
+    post: _mockFn,
+    create: vi.fn(() => _mockFn),
+  },
+  get: _mockFn,
+  post: _mockFn,
+  create: vi.fn(() => _mockFn),
+  defaults: {
+    withCredentials: true,
+    timeout: 10000,
+    headers: { post: {} },
+    responseType: 'json'
+  }
+}));
 
 describe('扩展功能 API 测试', () => {
   let app: Koa;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let callback: any;
-  let mockService: jest.Mock;
+  let mockService: Mock;
 
   beforeAll(() => {
     app = createTestApp();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     callback = (app as any).callback();
-    mockService = axios.create();
+    mockService = _mockFn;
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockService.mockResolvedValue({ data: { code: 0, data: {} } });
     global.userInfo = createTestUserInfo();
   });

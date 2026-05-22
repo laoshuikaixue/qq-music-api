@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import getMvByTagController from '../../../../routers/context/getMvByTag';
 import { getMvByTag } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getMvByTag', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -13,12 +15,17 @@ describe('routers/context/getMvByTag', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should call getMvByTag with default props', async () => {
-    (getMvByTag as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getMvByTag as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getMvByTagController(mockCtx, mockNext);
 
@@ -34,7 +41,7 @@ describe('routers/context/getMvByTag', () => {
       status: 200,
       body: { code: 0, data: { mvLists: [] } }
     };
-    (getMvByTag as jest.Mock).mockResolvedValue(mockResponse);
+    (getMvByTag as Mock).mockResolvedValue(mockResponse);
 
     await getMvByTagController(mockCtx, mockNext);
 
@@ -44,8 +51,12 @@ describe('routers/context/getMvByTag', () => {
 
   test('should handle errors from getMvByTag', async () => {
     const mockError = new Error('MV by tag error');
-    (getMvByTag as jest.Mock).mockRejectedValue(mockError);
+    (getMvByTag as Mock).mockRejectedValue(mockError);
 
-    await expect(getMvByTagController(mockCtx, mockNext)).rejects.toThrow('MV by tag error');
+    await getMvByTagController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(500);
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 });

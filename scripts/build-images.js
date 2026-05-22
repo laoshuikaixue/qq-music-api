@@ -1,15 +1,15 @@
-const {exec} = require('child_process');
-const { version, author } = require('../package.json');
+import { exec } from 'node:child_process';
+import fs from 'node:fs';
+
+const { version, author } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 
 const isLocal = process.argv[2] === 'local';
 
 console.log(`------------ ${isLocal ? 'Local' : 'Remote'} Docker Build Images Start ------------\n`);
 
 // const run = 'docker run -d --name qq-music-api -p 3200:3200 qq-music-api'
-const image = `${isLocal ? '' : `${author.toLowerCase()}/`}qq-music-api:${version}`
-const cmd = isLocal
-	? `docker build -t ${image} .`
-	: `docker image tag qq-music-api:${version} ${image}`;
+const image = `${isLocal ? '' : `${author.toLowerCase()}/`}qq-music-api:${version}`;
+const cmd = isLocal ? `docker build -t ${image} .` : `docker image tag qq-music-api:${version} ${image}`;
 
 console.log('cmd:', cmd, '\n');
 

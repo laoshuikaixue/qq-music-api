@@ -15,15 +15,15 @@ export default ({ url, method = 'get', options = {}, hasCommonParams = true }: Y
 	// Merge commonParams into params
 	// commonParams acts as defaults, specific params override them
 	if (hasCommonParams) {
-		opts.params = { ...config.commonParams, ...(opts.params || {}) };
+		opts.params = { ...config.getCommonParams(), ...opts.params };
 	} else {
-		opts.params = { ...(opts.params || {}) };
+		opts.params = { ...opts.params };
 	}
 
 	opts.headers = {
 		referer: 'https://c.y.qq.com/',
 		host: 'c.y.qq.com',
-		...(opts.headers || {})
+		...opts.headers
 	};
 
 	if (process.env.DEBUG === 'true') {
@@ -40,5 +40,5 @@ export default ({ url, method = 'get', options = {}, hasCommonParams = true }: Y
 
 		console.log(url, { opts: logOpts });
 	}
-	return request(url, method as Method, opts);
+	return request({ url, method: method as Method, options: opts });
 };

@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import getRadioListsController from '../../../../routers/context/getRadioLists';
 import { getRadioLists } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getRadioLists', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -13,12 +15,17 @@ describe('routers/context/getRadioLists', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should call getRadioLists with default props', async () => {
-    (getRadioLists as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getRadioLists as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getRadioListsController(mockCtx, mockNext);
 
@@ -34,7 +41,7 @@ describe('routers/context/getRadioLists', () => {
       status: 200,
       body: { code: 0, data: { radioLists: [] } }
     };
-    (getRadioLists as jest.Mock).mockResolvedValue(mockResponse);
+    (getRadioLists as Mock).mockResolvedValue(mockResponse);
 
     await getRadioListsController(mockCtx, mockNext);
 
@@ -44,8 +51,12 @@ describe('routers/context/getRadioLists', () => {
 
   test('should handle errors from getRadioLists', async () => {
     const mockError = new Error('Radio lists error');
-    (getRadioLists as jest.Mock).mockRejectedValue(mockError);
+    (getRadioLists as Mock).mockRejectedValue(mockError);
 
-    await expect(getRadioListsController(mockCtx, mockNext)).rejects.toThrow('Radio lists error');
+    await getRadioListsController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(500);
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 });

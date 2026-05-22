@@ -1,11 +1,12 @@
+import type { Mock } from 'vitest';
 import getTopListsController from '../../../../routers/context/getTopLists';
 import { getTopLists } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getTopLists', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
 
   beforeEach(() => {
     mockCtx = {
@@ -13,12 +14,12 @@ describe('routers/context/getTopLists', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    vi.clearAllMocks();
   });
 
   test('should call getTopLists with default props', async () => {
-    (getTopLists as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getTopLists as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getTopListsController(mockCtx, mockNext);
 
@@ -34,7 +35,7 @@ describe('routers/context/getTopLists', () => {
       status: 200,
       body: { code: 0, data: { topLists: [] } }
     };
-    (getTopLists as jest.Mock).mockResolvedValue(mockResponse);
+    (getTopLists as Mock).mockResolvedValue(mockResponse);
 
     await getTopListsController(mockCtx, mockNext);
 
@@ -42,23 +43,26 @@ describe('routers/context/getTopLists', () => {
     expect(mockCtx.body).toEqual({ code: 0, data: { topLists: [] } });
   });
 
-  test('should handle query parameters', async () => {
+  test('should pass query params through to API', async () => {
     mockCtx.query = { format: 'json' };
-    (getTopLists as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getTopLists as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getTopListsController(mockCtx, mockNext);
 
     expect(getTopLists).toHaveBeenCalledWith({
       method: 'get',
-      params: {},
+      params: { format: 'json' },
       option: {}
     });
   });
 
   test('should handle errors from getTopLists', async () => {
     const mockError = new Error('Top lists error');
-    (getTopLists as jest.Mock).mockRejectedValue(mockError);
+    (getTopLists as Mock).mockRejectedValue(mockError);
 
-    await expect(getTopListsController(mockCtx, mockNext)).rejects.toThrow('Top lists error');
+    await getTopListsController(mockCtx, mockNext);
+
+    expect(mockCtx.status).toBe(500);
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 });

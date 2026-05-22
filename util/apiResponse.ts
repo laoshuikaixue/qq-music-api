@@ -1,17 +1,19 @@
 import type { ApiResponse } from '../types/api';
 
+const INTERNAL_ERROR_MESSAGE = '服务器内部错误';
+
 /**
  * 创建成功的 API 响应
  * @param data 响应数据
  * @param status HTTP 状态码，默认 200
  */
 export function successResponse(data: any, status: number = 200): ApiResponse {
-  return {
-    status,
-    body: {
-      response: data,
-    },
-  };
+	return {
+		status,
+		body: {
+			response: data,
+		},
+	};
 }
 
 /**
@@ -20,12 +22,12 @@ export function successResponse(data: any, status: number = 200): ApiResponse {
  * @param status HTTP 状态码，默认 500
  */
 export function errorResponse(error: any, status: number = 500): ApiResponse {
-  return {
-    status,
-    body: {
-      error,
-    },
-  };
+	return {
+		status,
+		body: {
+			error: status >= 500 && error instanceof Error ? INTERNAL_ERROR_MESSAGE : error,
+		},
+	};
 }
 
 /**
@@ -34,42 +36,42 @@ export function errorResponse(error: any, status: number = 500): ApiResponse {
  * @param options 可选配置
  */
 export async function handleApi<T = any>(
-  promise: Promise<T>,
-  options?: {
-    /** 成功时的数据转换函数 */
-    transformData?: (data: T) => any;
-    /** 自定义状态码 */
-    customStatus?: number;
-    /** 是否记录错误日志 */
-    logError?: boolean;
-  }
+	promise: Promise<T>,
+	options?: {
+		/** 成功时的数据转换函数 */
+		transformData?: (data: T) => any;
+		/** 自定义状态码 */
+		customStatus?: number;
+		/** 是否记录错误日志 */
+		logError?: boolean;
+	},
 ): Promise<ApiResponse> {
-  try {
-    const result = await promise;
-    const resultAny = result as any;
-    const responseData = options?.transformData
-      ? options.transformData(resultAny.data || result)
-      : resultAny.data || result;
+	try {
+		const result = await promise;
+		const resultAny = result as any;
+		const responseData = options?.transformData
+			? options.transformData(resultAny.data || result)
+			: resultAny.data || result;
 
-    return {
-      status: options?.customStatus || 200,
-      body: {
-        response: responseData,
-      },
-    };
-  } catch (error) {
-    // 只在非测试环境下记录错误日志
-    if (options?.logError !== false && process.env.NODE_ENV !== 'test') {
-      console.log('API error:', error);
-    }
+		return {
+			status: options?.customStatus || 200,
+			body: {
+				response: responseData,
+			},
+		};
+	} catch (error) {
+		// 只在非测试环境下记录错误日志
+		if (options?.logError !== false && process.env.NODE_ENV !== 'test') {
+			console.log('API error:', error);
+		}
 
-    return {
-      status: options?.customStatus || 500,
-      body: {
-        error,
-      },
-    };
-  }
+		return {
+			status: options?.customStatus || 500,
+			body: {
+				error: INTERNAL_ERROR_MESSAGE,
+			},
+		};
+	}
 }
 
 /**
@@ -78,10 +80,10 @@ export async function handleApi<T = any>(
  * @param status HTTP 状态码
  */
 export function customResponse(body: any, status: number = 200): ApiResponse {
-  return {
-    status,
-    body,
-  };
+	return {
+		status,
+		body,
+	};
 }
 
 /**
@@ -89,10 +91,10 @@ export function customResponse(body: any, status: number = 200): ApiResponse {
  * @param message 错误消息
  */
 export function badRequest(message: string): ApiResponse {
-  return {
-    status: 400,
-    body: {
-      response: message,
-    },
-  };
+	return {
+		status: 400,
+		body: {
+			response: message,
+		},
+	};
 }

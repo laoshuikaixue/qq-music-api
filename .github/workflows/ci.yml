@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup npm 11
+        run: bash .github/scripts/setup-npm.sh 11.14.1
+
+      - run: npm install --no-package-lock
+
+      - name: Lint (oxlint)
+        run: npm run lint
+
+      - name: Test (vitest)
+        run: npm run test
+
+      - name: Build
+        run: npm run build

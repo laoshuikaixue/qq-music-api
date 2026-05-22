@@ -26,6 +26,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
+          package-manager-cache: false
+
+      - name: Setup npm 11
+        run: bash .github/scripts/setup-npm.sh 11.14.1
 
       - name: Install dependencies
         run: npm install --no-package-lock

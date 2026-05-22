@@ -1,10 +1,16 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { getSearchByKey } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
-const controller: Controller = async (ctx, next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const w = ctx.query.key || ctx.params.key;
   const { limit: n, page: p, catZhida, remoteplace = 'song' } = ctx.query;
-  
+
+  if (!w) {
+    setApiResponse(ctx, { status: 400, body: { response: 'search key is null' } });
+    return;
+  }
+
   const props = {
     method: 'get',
     params: {
@@ -12,23 +18,11 @@ const controller: Controller = async (ctx, next) => {
       n: +n || 10,
       p: +p || 1,
       catZhida: +catZhida || 1,
-      remoteplace: `txt.yqq.${remoteplace}`
+      remoteplace: `txt.yqq.${remoteplace}`,
     },
-    option: {}
+    option: {},
   };
-  
-  if (w) {
-    const { status, body } = await getSearchByKey(props);
-    Object.assign(ctx, {
-      status,
-      body
-    });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      response: 'search key is null'
-    };
-  }
-};
 
-export default controller;
+  const result = await getSearchByKey(props);
+  setApiResponse(ctx, result);
+});

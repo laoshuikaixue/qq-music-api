@@ -1,28 +1,20 @@
-import { Context, Next } from 'koa';
+import { KoaContext } from '../types';
 import { getUserLikedSongs } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
-// 获取用户喜欢的歌曲列表
-export default async (ctx: Context, next: Next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const { uin, offset = 0, limit = 30 } = ctx.query;
 
   if (!uin) {
-    ctx.status = 400;
-    ctx.body = {
-      error: '缺少 uin 参数'
-    };
+    setApiResponse(ctx, { status: 400, body: { error: '缺少 uin 参数' } });
     return;
   }
 
-  const { status, body } = await getUserLikedSongs({
+  const result = await getUserLikedSongs({
     uin: uin as string,
     offset: Number(offset),
-    limit: Number(limit)
+    limit: Number(limit),
   });
 
-  Object.assign(ctx, {
-    status,
-    body
-  });
-
-  await next();
-};
+  setApiResponse(ctx, result);
+});

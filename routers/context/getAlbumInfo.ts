@@ -1,26 +1,7 @@
-import { KoaContext } from '../types';
+import { createController, validateRequired } from '../util';
 import { getAlbumInfo } from '../../module';
-import { setApiResponse, withErrorHandler } from '../util';
-import { errorResponse } from '../../util/apiResponse';
 
-const getAlbumInfoController = withErrorHandler(async (ctx: KoaContext) => {
-  const { albummid } = ctx.query;
-  
-  const props = {
-    method: 'get',
-    params: {
-      albummid
-    },
-    option: {}
-  };
-  
-  if (!albummid) {
-    setApiResponse(ctx, errorResponse('no albummid', 400));
-    return;
-  }
-  
-  const result = await getAlbumInfo(props);
-  setApiResponse(ctx, result);
+export default createController(getAlbumInfo, {
+  validator: validateRequired(['albummid']),
+  errorMessage: 'no albummid',
 });
-
-export default getAlbumInfoController;

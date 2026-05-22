@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import getSingerListController from '../../../../routers/context/getSingerList';
 import { UCommon } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getSingerList', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
-  let consoleErrorSpy: jest.SpyInstance;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -14,9 +15,9 @@ describe('routers/context/getSingerList', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -24,7 +25,7 @@ describe('routers/context/getSingerList', () => {
   });
 
   test('should call UCommon with default parameters', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
@@ -40,13 +41,13 @@ describe('routers/context/getSingerList', () => {
 
   test('should use default values for all query parameters', async () => {
     mockCtx.query = {};
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param).toMatchObject({
       area: -100,
       sex: -100,
@@ -59,81 +60,81 @@ describe('routers/context/getSingerList', () => {
 
   test('should accept custom area parameter', async () => {
     mockCtx.query = { area: '1' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param.area).toBe(1);
   });
 
   test('should accept custom sex parameter', async () => {
     mockCtx.query = { sex: '0' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param.sex).toBe(0);
   });
 
   test('should accept custom genre parameter', async () => {
     mockCtx.query = { genre: '5' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param.genre).toBe(5);
   });
 
   test('should accept custom index parameter', async () => {
     mockCtx.query = { index: '3' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param.index).toBe(3);
   });
 
   test('should accept custom page parameter', async () => {
     mockCtx.query = { page: '3' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param.sin).toBe(160);
     expect(dataParam.singerList.param.cur_page).toBe(3);
   });
 
   test('should calculate sin correctly based on page', async () => {
     mockCtx.query = { page: '5' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     // sin = (pageNum - 1) * 80 = (5 - 1) * 80 = 320
     expect(dataParam.singerList.param.sin).toBe(320);
   });
 
   test('should set response on successful API call', async () => {
     const mockResponse = { code: 0, data: { singers: [] } };
-    (UCommon as jest.Mock).mockResolvedValue({ data: mockResponse });
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
 
     await getSingerListController(mockCtx, mockNext);
 
@@ -144,24 +145,24 @@ describe('routers/context/getSingerList', () => {
   });
 
   test('should handle API errors gracefully', async () => {
-    (UCommon as jest.Mock).mockRejectedValue(new Error('API error'));
+    (UCommon as Mock).mockRejectedValue(new Error('API error'));
 
     await getSingerListController(mockCtx, mockNext);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
     expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: 'API error' });
+    expect(mockCtx.body).toEqual({ error: '上游服务异常' });
   });
 
   test('should construct correct data structure', async () => {
     mockCtx.query = { area: '1', sex: '0', genre: '5', index: '3', page: '2' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam).toMatchObject({
       comm: {
         ct: 24,
@@ -190,13 +191,13 @@ describe('routers/context/getSingerList', () => {
       index: '-50',
       page: '10'
     };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getSingerListController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.singerList.param).toMatchObject({
       area: 100,
       sex: -1,
@@ -207,4 +208,3 @@ describe('routers/context/getSingerList', () => {
     });
   });
 });
-

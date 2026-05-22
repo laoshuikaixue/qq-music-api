@@ -1,33 +1,25 @@
-import { Context, Next } from 'koa';
+import { KoaContext } from '../types';
 import { getUserPlaylists } from '../../module';
 import { resolveRequestCookie } from '../../util/cookieResolver';
+import { setApiResponse, withErrorHandler } from '../util';
 
-export default async (ctx: Context, next: Next) => {
+export default withErrorHandler(async (ctx: KoaContext) => {
   const { uin, offset = 0, limit = 30 } = ctx.query;
 
   if (!uin) {
-    ctx.status = 400;
-    ctx.body = {
-      error: '缺少 uin 参数'
-    };
+    setApiResponse(ctx, { status: 400, body: { error: '缺少 uin 参数' } });
     return;
   }
 
   const normalizedUin = Array.isArray(uin) ? uin[0] : uin;
   const { cookie } = resolveRequestCookie(ctx);
 
-  const { status, body } = await getUserPlaylists({
+  const result = await getUserPlaylists({
     uin: String(normalizedUin),
     offset: Number(offset),
     limit: Number(limit),
-    cookie
+    cookie,
   });
 
-  Object.assign(ctx, {
-    status,
-    body
-  });
-
-  await next();
-};
-
+  setApiResponse(ctx, result);
+});

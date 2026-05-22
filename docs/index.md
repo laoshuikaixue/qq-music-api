@@ -47,7 +47,7 @@ features:
     linkText: 查看用户接口
   - title: 工程化
     icon: 🛠️
-    details: 已完成 TypeScript 迁移，内置 Jest 测试与 VitePress 文档站点
+    details: 已完成 TypeScript 迁移，内置 Vitest 测试与 VitePress 文档站点
     link: /guide/architecture
     linkText: 查看项目架构
 ---

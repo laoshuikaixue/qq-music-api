@@ -15,7 +15,7 @@
 - Web 框架：Koa 2
 - 路由系统：@koa/router
 - 文档系统：VitePress
-- 测试框架：Jest
+- 测试框架：Vitest
 
 ## 启动与构建
 
@@ -51,9 +51,9 @@ npm run start
 | -------- | ------------------------------------ | ------------------------------- |
 | 开发     | `npm run dev`                        | `package.json`                  |
 | 构建     | `npm run build`                      | `tsconfig.json`                 |
-| 测试     | `npm run test`                       | `jest.config.ts`                |
-| 代码检查 | `npm run eslint`                     | `.eslintrc.js`                  |
-| 格式化   | `npm run prettier`                   | `.prettierrc`                   |
+| 测试     | `npm run test`                       | `vitest.config.ts`              |
+| 代码检查 | `npm run lint`                       | `.oxlintrc.json`                |
+| 格式化   | `npm run format`                     | `.prettierrc`                   |
 | 文档开发 | `npm run docs:dev`                   | `docs/.vitepress/config.mjs`    |
 | 发版     | `git push origin main --follow-tags` | `.github/workflows/package.yml` |
 
@@ -151,8 +151,8 @@ npm run docs:build
 如果修改了格式或风格敏感文件，再执行：
 
 ```bash
-npm run eslint
-npm run prettier
+npm run lint
+npm run format
 ```
 
 ## 关键注意事项
@@ -161,7 +161,7 @@ npm run prettier
 2. 生产启动依赖 `dist/` 目录，因此发布前必须先执行构建。
 3. 当前仓库包含扫码登录相关接口实现，不要在未理解流程前随意调整登录状态字段。
 4. 文档内容位于 `docs/`，接口能力变更时要同步更新文档。
-5. 现有测试以 Jest 为主，新增行为建议补充对应测试。
+5. 现有测试以 Vitest 为主，新增行为建议补充对应测试。
 
 ## 建议的开发流程
 
@@ -257,7 +257,7 @@ npm 包版本         = package.json 的版本（或手动指定的标签版本�
    - ✅ 检出当前 main 分支的代码
    - ✅ 安装依赖
    - ✅ 运行测试（npm test）
-   - ✅ 运行代码检查（npm run eslint）
+   - ✅ 运行代码检查（npm run lint）
    - ✅ 构建 TypeScript 和文档
    - ✅ 生成 CHANGELOG
    - ✅ 发布到 npm

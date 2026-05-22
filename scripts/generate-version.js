@@ -6,9 +6,12 @@
  * 输出位置：docs/public/version.json
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // 读取 package.json
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
@@ -19,24 +22,24 @@ let commitSha = null;
 let branchName = null;
 
 try {
-  commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-} catch (e) {
-  // 非 Git 环境或 Git 不可用
+	commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+} catch {
+	// 非 Git 环境或 Git 不可用
 }
 
 try {
-  branchName = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
-} catch (e) {
-  // 非 Git 环境或 Git 不可用
+	branchName = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
+} catch {
+	// 非 Git 环境或 Git 不可用
 }
 
 // 生成 version.json 内容
 const versionJson = {
-  version: packageJson.version,
-  name: packageJson.name,
-  generatedAt: new Date().toISOString(),
-  ...(commitSha && { commit: commitSha }),
-  ...(branchName && { branch: branchName })
+	version: packageJson.version,
+	name: packageJson.name,
+	generatedAt: new Date().toISOString(),
+	...(commitSha && { commit: commitSha }),
+	...(branchName && { branch: branchName }),
 };
 
 // 写入到 docs/public 目录
@@ -45,7 +48,7 @@ const versionJsonPath = path.join(docsPublicPath, 'version.json');
 
 // 确保目录存在
 if (!fs.existsSync(docsPublicPath)) {
-  fs.mkdirSync(docsPublicPath, { recursive: true });
+	fs.mkdirSync(docsPublicPath, { recursive: true });
 }
 
 // 写入文件
@@ -55,8 +58,8 @@ console.log(`✅ version.json generated: ${versionJsonPath}`);
 console.log(`   Version: ${versionJson.version}`);
 console.log(`   Generated At: ${versionJson.generatedAt}`);
 if (commitSha) {
-  console.log(`   Commit: ${commitSha}`);
+	console.log(`   Commit: ${commitSha}`);
 }
 if (branchName) {
-  console.log(`   Branch: ${branchName}`);
+	console.log(`   Branch: ${branchName}`);
 }

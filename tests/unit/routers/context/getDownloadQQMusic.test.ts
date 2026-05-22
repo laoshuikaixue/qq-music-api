@@ -1,11 +1,12 @@
+import type { Mock } from 'vitest';
 import getDownloadQQMusicController from '../../../../routers/context/getDownloadQQMusic';
 import { downloadQQMusic } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getDownloadQQMusic', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
 
   beforeEach(() => {
     mockCtx = {
@@ -13,12 +14,12 @@ describe('routers/context/getDownloadQQMusic', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    vi.clearAllMocks();
   });
 
   test('should call downloadQQMusic with default props', async () => {
-    (downloadQQMusic as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (downloadQQMusic as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getDownloadQQMusicController(mockCtx, mockNext);
 
@@ -34,7 +35,7 @@ describe('routers/context/getDownloadQQMusic', () => {
       status: 200,
       body: { code: 0, data: { downloadUrl: 'http://example.com' } }
     };
-    (downloadQQMusic as jest.Mock).mockResolvedValue(mockResponse);
+    (downloadQQMusic as Mock).mockResolvedValue(mockResponse);
 
     await getDownloadQQMusicController(mockCtx, mockNext);
 
@@ -43,7 +44,7 @@ describe('routers/context/getDownloadQQMusic', () => {
   });
 
   test('should handle errors from downloadQQMusic', async () => {
-    (downloadQQMusic as jest.Mock).mockResolvedValue({
+    (downloadQQMusic as Mock).mockResolvedValue({
       status: 502,
       body: { error: 'Download error' }
     });

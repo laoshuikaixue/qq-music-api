@@ -1,97 +1,55 @@
 // 推荐功能 API 测试
 
-jest.mock('axios', () => {
-  const service = Object.assign(
-    jest.fn().mockResolvedValue({ data: { code: 0, data: {} } }),
+import request from 'supertest';
+import Koa from 'koa';
+import {
+  createTestApp,
+  createTestUserInfo,
+  getLatestRequestCookie,
+  getLatestRequestPayload
+} from '../../../tests/setup/testUtils';
+
+const { mockFn } = vi.hoisted(() => {
+  const mockFn = Object.assign(
+    vi.fn().mockResolvedValue({ data: { code: 0, data: {} } }),
     {
       interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
       }
     }
   );
-
-  return {
-    get: service,
-    post: service,
-    create: jest.fn(() => service),
-    defaults: {
-      withCredentials: true,
-      timeout: 10000,
-      headers: { post: {} },
-      responseType: 'json'
-    }
-  };
+  return { mockFn };
 });
 
-import request from 'supertest';
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import router from '../../../routers/router';
-import cors from '../../../middlewares/koa-cors';
-import type { UserInfo } from '../../../types/global';
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const axios = require('axios');
-const mockFn = axios.create() as jest.Mock & {
-  interceptors?: {
-    request: { use: jest.Mock }
-    response: { use: jest.Mock }
+vi.mock('axios', () => ({
+  default: {
+    get: mockFn,
+    post: mockFn,
+    create: vi.fn(() => mockFn),
+  },
+  get: mockFn,
+  post: mockFn,
+  create: vi.fn(() => mockFn),
+  defaults: {
+    withCredentials: true,
+    timeout: 10000,
+    headers: { post: {} },
+    responseType: 'json'
   }
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface AnyMiddleware extends Function {
-  (ctx: any, next: () => Promise<unknown>): Promise<void>;
-}
-
-function createTestApp(): Koa {
-  const app = new Koa();
-  app.use(cors() as AnyMiddleware);
-  app.use(bodyParser() as AnyMiddleware);
-  app.use(router.routes());
-  app.use(router.allowedMethods());
-  return app;
-}
-
-function createTestUserInfo(): UserInfo {
-  return {
-    loginUin: '123456',
-    cookie: 'test_cookie=123',
-    cookieList: ['test_cookie=123'],
-    cookieObject: { test_cookie: '123' },
-    refreshData: () => {}
-  };
-}
-
-function getLatestRequestOptions() {
-  const latestCall = mockFn.mock.calls[mockFn.mock.calls.length - 1] || [];
-  return latestCall[0] || {};
-}
-
-function getLatestRequestCookie() {
-  const headers = (getLatestRequestOptions().headers || {}) as Record<string, string>;
-  return headers.Cookie || headers.cookie;
-}
-
-function getLatestRequestPayload() {
-  const latestOptions = getLatestRequestOptions();
-  return latestOptions.data ? JSON.parse(latestOptions.data) : null;
-}
+}));
 
 describe('推荐功能 API 测试', () => {
   let app: Koa;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let callback: any;
 
   beforeAll(() => {
     app = createTestApp();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     callback = (app as any).callback();
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFn.mockReset();
     mockFn.mockResolvedValue({ data: { code: 0, data: {} } });
     global.userInfo = createTestUserInfo();
@@ -137,7 +95,7 @@ describe('推荐功能 API 测试', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('response');
-      expect(getLatestRequestCookie()).toBe('test_cookie=value');
+      expect(getLatestRequestCookie(mockFn)).toBe('test_cookie=value');
     }, 10000);
 
     test('应该处理上游错误响应', async () => {
@@ -189,7 +147,7 @@ describe('推荐功能 API 测试', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('response');
-      expect(getLatestRequestCookie()).toBe('test_cookie=value');
+      expect(getLatestRequestCookie(mockFn)).toBe('test_cookie=value');
     }, 10000);
 
     test('应该处理网络错误', async () => {
@@ -218,7 +176,7 @@ describe('推荐功能 API 测试', () => {
       });
 
       const response = await request(callback).get('/getNewSongs').expect(200);
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(response.body.response).toHaveProperty('code', 0);
@@ -245,7 +203,7 @@ describe('推荐功能 API 测试', () => {
         .get('/getNewSongs')
         .query({ areaId: '2' })
         .expect(200);
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(payload.new_song.param.type).toBe(2);
@@ -269,7 +227,7 @@ describe('推荐功能 API 测试', () => {
         .query({ areaId: '1', limit: '50' })
         .expect(200);
       
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(payload.new_song.param.type).toBe(1);
@@ -281,7 +239,7 @@ describe('推荐功能 API 测试', () => {
         .get('/getNewSongs')
         .query({ areaId: 'invalid' })
         .expect(200);
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toBeDefined();
       expect(payload.new_song.param.type).toBe(5);
@@ -309,7 +267,7 @@ describe('推荐功能 API 测试', () => {
 
       expect(response.body).toHaveProperty('response');
       expect(response.body.response).toHaveProperty('code', 0);
-      expect(getLatestRequestPayload()).toHaveProperty('recomPlaylist');
+      expect(getLatestRequestPayload(mockFn)).toHaveProperty('recomPlaylist');
     }, 10000);
 
     test('应该根据 type=2 切换到电台推荐请求', async () => {
@@ -329,7 +287,7 @@ describe('推荐功能 API 测试', () => {
         .query({ type: '2' })
         .expect(200);
       
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(payload).toHaveProperty('radio');
@@ -358,7 +316,7 @@ describe('推荐功能 API 测试', () => {
         .query({ type: '3' })
         .expect(200);
       
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(payload).toHaveProperty('mv');
@@ -387,7 +345,7 @@ describe('推荐功能 API 测试', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('response');
-      expect(getLatestRequestPayload()).toHaveProperty('recomPlaylist');
+      expect(getLatestRequestPayload(mockFn)).toHaveProperty('recomPlaylist');
     }, 10000);
 
     test('应该支持 cookie 参数', async () => {
@@ -408,7 +366,7 @@ describe('推荐功能 API 测试', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('response');
-      expect(getLatestRequestCookie()).toBe('user_cookie=value');
+      expect(getLatestRequestCookie(mockFn)).toBe('user_cookie=value');
     }, 10000);
 
     test('应该处理上游错误', async () => {
@@ -440,7 +398,7 @@ describe('推荐功能 API 测试', () => {
         .get('/getSimilarSongs')
         .query({ songmid: 'test123' })
         .expect(200);
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(response.body.response).toHaveProperty('code', 0);
@@ -485,7 +443,7 @@ describe('推荐功能 API 测试', () => {
         .query({ songmid: ['test1', 'test2'] })
         .expect(200);
       
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       // 数组类型会取第一个值
@@ -508,7 +466,7 @@ describe('推荐功能 API 测试', () => {
         .get('/getSimilarSongs')
         .query({ songmid: 12345 })
         .expect(200);
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(payload.similarSong.param.songmid).toBe('12345');
@@ -532,7 +490,7 @@ describe('推荐功能 API 测试', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('response');
-      expect(getLatestRequestCookie()).toBe('user_cookie=value');
+      expect(getLatestRequestCookie(mockFn)).toBe('user_cookie=value');
     }, 10000);
 
     test('应该处理不同的 songmid 格式', async () => {
@@ -551,7 +509,7 @@ describe('推荐功能 API 测试', () => {
         .get('/getSimilarSongs')
         .query({ songmid: '003rJSwm3TechU' })
         .expect(200);
-      const payload = getLatestRequestPayload();
+      const payload = getLatestRequestPayload(mockFn);
 
       expect(response.body).toHaveProperty('response');
       expect(payload.similarSong.param.songmid).toBe('003rJSwm3TechU');

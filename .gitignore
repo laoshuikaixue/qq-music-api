@@ -33,6 +33,7 @@ config/user-info.json
 
 # IDE 配置
 .kilocode/
+.claude/
 
 # 测试覆盖率报告
 coverage/

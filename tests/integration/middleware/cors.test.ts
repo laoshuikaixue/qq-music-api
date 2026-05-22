@@ -6,14 +6,14 @@ describe('CORS Middleware', () => {
   test('should set CORS headers', async () => {
     const ctx = {
       method: 'GET',
-      set: jest.fn(),
-      get: jest.fn().mockReturnValue('http://localhost:3000'),
-      vary: jest.fn(),
+      set: vi.fn(),
+      get: vi.fn().mockReturnValue('http://localhost:3000'),
+      vary: vi.fn(),
       status: 200,
       body: {}
     } as unknown as Parameters<ReturnType<typeof cors>>[0];
-    
-    const next = jest.fn().mockResolvedValue(undefined);
+
+    const next = vi.fn().mockResolvedValue(undefined);
 
     await cors()(ctx, next);
 
@@ -25,13 +25,13 @@ describe('CORS Middleware', () => {
   test('should handle preflight request', async () => {
     const ctx = {
       method: 'OPTIONS',
-      set: jest.fn(),
-      get: jest.fn().mockReturnValue('GET'),
-      vary: jest.fn(),
+      set: vi.fn(),
+      get: vi.fn().mockReturnValue('GET'),
+      vary: vi.fn(),
       status: 200
     } as unknown as Parameters<ReturnType<typeof cors>>[0];
-    
-    const next = jest.fn().mockResolvedValue(undefined);
+
+    const next = vi.fn().mockResolvedValue(undefined);
 
     await cors()(ctx, next);
 

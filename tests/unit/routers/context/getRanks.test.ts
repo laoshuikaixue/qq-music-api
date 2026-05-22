@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import getRanksController from '../../../../routers/context/getRanks';
 import { UCommon } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getRanks', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
-  let consoleErrorSpy: jest.SpyInstance;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -14,9 +15,9 @@ describe('routers/context/getRanks', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -24,7 +25,7 @@ describe('routers/context/getRanks', () => {
   });
 
   test('should call UCommon with default parameters', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
@@ -40,87 +41,87 @@ describe('routers/context/getRanks', () => {
 
   test('should use default topId value of 4', async () => {
     mockCtx.query = {};
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1.param.topId).toBe(4);
   });
 
   test('should accept custom topId parameter', async () => {
     mockCtx.query = { topId: '10' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1.param.topId).toBe(10);
   });
 
   test('should use default limit value of 20', async () => {
     mockCtx.query = {};
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1.param.num).toBe(20);
   });
 
   test('should accept custom limit parameter', async () => {
     mockCtx.query = { limit: '50' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1.param.num).toBe(50);
   });
 
   test('should use default page value of 0', async () => {
     mockCtx.query = {};
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1.param.offset).toBe(0);
   });
 
   test('should accept custom page parameter', async () => {
     mockCtx.query = { page: '5' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1.param.offset).toBe(5);
   });
 
   test('should calculate week number correctly', async () => {
     const fixedDate = new Date('2023-01-05T12:00:00Z'); // fixed, deterministic date
-    jest.useFakeTimers().setSystemTime(fixedDate);
+    vi.useFakeTimers().setSystemTime(fixedDate);
 
     try {
       mockCtx.query = {};
-      (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+      (UCommon as Mock).mockResolvedValue({ data: {} });
 
       await getRanksController(mockCtx, mockNext);
 
-      const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+      const callArgs = (UCommon as Mock).mock.calls[0][0];
       const dataParam = JSON.parse(callArgs.params.data);
 
       const expectedWeek = getWeekNumber(fixedDate);
@@ -128,13 +129,13 @@ describe('routers/context/getRanks', () => {
 
       expect(dataParam.req_1.param.period).toBe(expectedPeriod);
     } finally {
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 
   test('should set response on successful API call', async () => {
     const mockResponse = { code: 0, data: { topList: [] } };
-    (UCommon as jest.Mock).mockResolvedValue({ data: mockResponse });
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
 
     await getRanksController(mockCtx, mockNext);
 
@@ -145,23 +146,23 @@ describe('routers/context/getRanks', () => {
   });
 
   test('should handle API errors gracefully', async () => {
-    (UCommon as jest.Mock).mockRejectedValue(new Error('API error'));
+    (UCommon as Mock).mockRejectedValue(new Error('API error'));
 
     await getRanksController(mockCtx, mockNext);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
     expect(mockCtx.status).toBe(502);
-    expect(mockCtx.body).toEqual({ error: 'API error' });
+    expect(mockCtx.body).toEqual({ error: '上游服务异常' });
   });
 
   test('should have correct comm structure', async () => {
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.comm).toMatchObject({
       ct: 24,
       cv: 4747474,
@@ -174,13 +175,13 @@ describe('routers/context/getRanks', () => {
 
   test('should have correct req_1 module config', async () => {
     mockCtx.query = { topId: '10', limit: '30', page: '2' };
-    (UCommon as jest.Mock).mockResolvedValue({ data: {} });
+    (UCommon as Mock).mockResolvedValue({ data: {} });
 
     await getRanksController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as jest.Mock).mock.calls[0][0];
+    const callArgs = (UCommon as Mock).mock.calls[0][0];
     const dataParam = JSON.parse(callArgs.params.data);
-    
+
     expect(dataParam.req_1).toMatchObject({
       module: 'musicToplist.ToplistInfoServer',
       method: 'GetDetail',

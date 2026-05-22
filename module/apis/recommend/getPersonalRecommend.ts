@@ -1,4 +1,4 @@
-import { commonParams } from '../../config'
+import { getCommonParams } from '../../config'
 import uCommon from '../u_common'
 import { handleApi } from '../../../util/apiResponse'
 
@@ -52,7 +52,7 @@ export async function getPersonalRecommend(type: number = 1, cookie?: string) {
   const recommendConfig = resolveRecommendConfig(type)
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },
@@ -86,7 +86,7 @@ export async function getPersonalRecommend(type: number = 1, cookie?: string) {
 export async function getSimilarSongs(songmid: string, cookie?: string) {
   const data = {
     comm: {
-      ...commonParams,
+      ...getCommonParams(),
       ct: 24,
       cv: 0
     },

@@ -25,13 +25,12 @@
 - 开发语言：TypeScript
 - 路由系统：[@koa/router](package.json:53)
 - 文档系统：[VitePress 2](https://vitepress.dev/)
-- 测试框架：[`Jest`](package.json:89)
+- 测试框架：[`Vitest`](package.json:58)
 - 默认端口：`3200`
 
 ## API 结构图
 
 > 当前版本已包含扫码登录相关接口，并已完成 TypeScript 迁移。
-
 
 📖 **详细 API 文档**： [查看完整 API 文档](https://sansenjian.github.io/qq-music-api/)
 
@@ -100,52 +99,28 @@ npm run docs:dev
 
 ### 生产依赖
 
-| 依赖                    | 当前版本  |
-| ----------------------- | --------- |
-| `@koa/router`           | `^15.3.1` |
-| `axios`                 | `^1.16.0` |
-| `chalk`                 | `^4.1.0`  |
-| `koa`                   | `^2.16.1` |
-| `koa-bodyparser`        | `^4.4.1`  |
-| `koa-static`            | `^5.0.0`  |
+| 依赖          | 说明        |
+| ------------- | ----------- |
+| `@koa/router` | 路由        |
+| `axios`       | HTTP 客户端 |
+| `koa`         | Web 框架    |
 
 ### 开发依赖
 
-| 依赖                                         | 当前版本  |
-| -------------------------------------------- | --------- |
-| `@babel/core`                                | `^7.23.0` |
-| `@babel/plugin-transform-async-to-generator` | `^7.23.0` |
-| `@babel/preset-env`                          | `^7.29.0` |
-| `@babel/preset-typescript`                   | `^7.28.5` |
-| `@babel/register`                            | `^7.23.0` |
-| `@commitlint/cli`                            | `^18.0.0` |
-| `@commitlint/config-conventional`            | `^18.0.0` |
-| `@types/jest`                                | `^30.0.0` |
-| `@types/koa`                                 | `^3.0.1`  |
-| `@types/koa__router`                         | `^12.0.5` |
-| `@types/koa-bodyparser`                      | `^4.3.13` |
-| `@types/node`                                | `^25.3.3` |
-| `@types/supertest`                           | `^7.2.0`  |
-| `conventional-changelog-cli`                 | `^4.0.0`  |
-| `eslint`                                     | `^8.57.0` |
-| `eslint-config-standard`                     | `^17.0.0` |
-| `eslint-plugin-import`                       | `^2.29.0` |
-| `eslint-plugin-n`                            | `^16.0.0` |
-| `eslint-plugin-promise`                      | `^6.0.0`  |
-| `husky`                                      | `^9.0.0`  |
-| `jest`                                       | `^30.2.0` |
-| `lint-staged`                                | `^15.0.0` |
-| `nodemon`                                    | `^3.1.14` |
-| `prettier`                                   | `^3.8.1`  |
-| `rimraf`                                     | `^6.1.3`  |
-| `sinon`                                      | `^21.0.1` |
-| `supertest`                                  | `^7.2.2`  |
-| `ts-jest`                                    | `^29.4.6` |
-| `ts-node`                                    | `^10.9.2` |
-| `tsx`                                        | `^4.21.0` |
-| `typescript`                                 | `5.7.3`   |
-| `vitepress`                                  | `^2.0.0-alpha.17` |
-| `vue`                                        | `^3.5.29` |
+| 依赖                    | 说明                    |
+| ----------------------- | ----------------------- |
+| `oxlint`                | 代码检查（替换 ESLint） |
+| `oxc-transform`         | Rust TypeScript 转译    |
+| `typescript`            | 类型检查 + 声明生成     |
+| `vite`                  | 打包工具（Rolldown）    |
+| `vitest`                | 测试框架                |
+| `tsx`                   | 开发热重载              |
+| `prettier`              | 代码格式化              |
+| `@commitlint/*`         | 提交规范                |
+| `husky` + `lint-staged` | Git hooks               |
+| `vitepress` + `vue`     | 文档站点                |
+| `sinon`                 | 测试 mock               |
+| `supertest`             | HTTP 测试               |
 
 ## 当前主要能力
 

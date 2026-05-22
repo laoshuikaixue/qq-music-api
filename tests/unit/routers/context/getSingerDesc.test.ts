@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import getSingerDescController from '../../../../routers/context/getSingerDesc';
 import { getSingerDesc } from '../../../../module';
 
-jest.mock('../../../../module');
+vi.mock('../../../../module');
 
 describe('routers/context/getSingerDesc', () => {
   let mockCtx: any;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     mockCtx = {
@@ -13,8 +15,13 @@ describe('routers/context/getSingerDesc', () => {
       body: null,
       query: {}
     };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
+    mockNext = vi.fn();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should return 400 when singermid is missing', async () => {
@@ -24,8 +31,7 @@ describe('routers/context/getSingerDesc', () => {
 
     expect(mockCtx.status).toBe(400);
     expect(mockCtx.body).toEqual({
-      status: 400,
-      response: 'no singermid'
+      response: '缺少必需参数：singermid'
     });
     expect(getSingerDesc).not.toHaveBeenCalled();
   });
@@ -41,7 +47,7 @@ describe('routers/context/getSingerDesc', () => {
 
   test('should call getSingerDesc with singermid param', async () => {
     mockCtx.query = { singermid: 'test123' };
-    (getSingerDesc as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+    (getSingerDesc as Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
 
     await getSingerDescController(mockCtx, mockNext);
 
@@ -60,7 +66,7 @@ describe('routers/context/getSingerDesc', () => {
       status: 200,
       body: { code: 0, data: { singer: { name: 'Test Singer' } } }
     };
-    (getSingerDesc as jest.Mock).mockResolvedValue(mockResponse);
+    (getSingerDesc as Mock).mockResolvedValue(mockResponse);
 
     await getSingerDescController(mockCtx, mockNext);
 
@@ -74,7 +80,7 @@ describe('routers/context/getSingerDesc', () => {
       status: 404,
       body: { code: -1, message: 'Not found' }
     };
-    (getSingerDesc as jest.Mock).mockResolvedValue(mockResponse);
+    (getSingerDesc as Mock).mockResolvedValue(mockResponse);
 
     await getSingerDescController(mockCtx, mockNext);
 
@@ -85,8 +91,12 @@ describe('routers/context/getSingerDesc', () => {
   test('should handle errors from getSingerDesc', async () => {
     mockCtx.query = { singermid: 'test123' };
     const mockError = new Error('Singer desc error');
-    (getSingerDesc as jest.Mock).mockRejectedValue(mockError);
+    (getSingerDesc as Mock).mockRejectedValue(mockError);
 
-    await expect(getSingerDescController(mockCtx, mockNext)).rejects.toThrow('Singer desc error');
+    await getSingerDescController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(500);
+    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
   });
 });

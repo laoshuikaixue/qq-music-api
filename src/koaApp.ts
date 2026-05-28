@@ -64,7 +64,7 @@ app.use(async (ctx, next) => {
 // CORS
 app.use(
 	cors({
-		origin: [
+		credentialOrigins: [
 			'https://y.qq.com',
 			'https://c.y.qq.com',
 			'https://u.y.qq.com',

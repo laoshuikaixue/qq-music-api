@@ -31,7 +31,7 @@ npm install
 npm run dev
 ```
 
-默认启动入口为 `app.ts`，默认端口为 `3200`。
+默认开发启动入口为 `src/app.ts`，默认端口为 `3200`。
 
 ### 生产构建
 
@@ -66,14 +66,15 @@ npm run build && npm run test && npm run docs:build
 ## 目录结构
 
 ```text
-app.ts                 应用启动入口
-index.ts               包导出入口
-module/                API 请求封装层
-routers/               HTTP 控制器与路由注册
-middlewares/           Koa 中间件
-util/                  通用工具函数
-config/                运行时配置
-types/                 全局类型与公共类型定义
+src/app.ts             应用启动入口
+src/index.ts           包导出入口
+src/services/        API 请求封装层
+src/controllers/     HTTP 控制器
+src/routes/          路由注册与 API 元数据
+src/middlewares/     Koa 中间件
+src/util/            通用工具函数
+src/config/          运行时配置
+src/types/           全局类型与公共类型定义
 docs/                  VitePress 文档站点
 tests/                 单元测试与集成测试
 public/                静态资源
@@ -82,7 +83,7 @@ scripts/               辅助脚本
 
 ## 分层说明
 
-### module/
+### src/services/
 
 负责直接请求 QQ 音乐相关接口，通常只处理：
 
@@ -91,20 +92,20 @@ scripts/               辅助脚本
 - 基础数据格式转换
 - 返回统一响应结构
 
-### routers/context/
+### src/controllers/
 
 负责 HTTP 层控制器逻辑，通常只处理：
 
 - 读取 `ctx.query` 或 `ctx.request.body`
 - 参数校验
-- 调用 `module/` 中对应能力
+- 调用 `src/services/` 中对应能力
 - 设置 `ctx.body` 与 `ctx.status`
 
-### routers/router.ts
+### src/routes/router.ts
 
 负责统一注册所有路由。
 
-### util/
+### src/util/
 
 放置跨模块复用的通用逻辑，例如响应包装、颜色输出等。
 
@@ -112,20 +113,20 @@ scripts/               辅助脚本
 
 1. 新增功能时，优先保持现有目录分层，不要把路由逻辑和接口请求逻辑混写。
 2. 新增接口时，通常需要同时补充：
-   - `module/apis/...` 中的接口实现
-   - `routers/context/...` 中的控制器
-   - `routers/context/index.ts` 或相关导出
-   - `routers/router.ts` 中的路由注册
+   - `src/services/apis/...` 中的接口实现
+   - `src/controllers/...` 中的控制器
+   - `src/controllers/index.ts` 或相关导出
+   - `src/routes/router.ts` 中的路由注册
    - 必要时补充文档与测试
 3. 统一使用 TypeScript，避免继续引入新的 `.js` 业务文件。
-4. 尽量复用已有类型定义，公共类型优先放到 `types/`。
+4. 尽量复用已有类型定义，公共类型优先放到 `src/types/`。
 5. 保持返回结构一致，优先复用已有响应工具。
 6. 修改 Cookie 相关逻辑时，参考 `tests/integration/login.test.ts` 验证扫码登录兼容性
 
 ## 行为边界
 
 1. 仅在当前仓库内执行分析、修改与命令操作，不推断或操作仓库外文件。
-2. 修改实现时，必须遵守既有分层边界：`module/` 不写 HTTP 控制器逻辑，`routers/context/` 不直接承载上游请求细节，`routers/router.ts` 只负责路由注册。
+2. 修改实现时，必须遵守既有分层边界：`src/services/` 不写 HTTP 控制器逻辑，`src/controllers/` 不直接承载上游请求细节，`src/routes/router.ts` 只负责路由注册。
 3. 涉及扫码登录、Cookie、用户信息或其他敏感配置时，只能做兼容性修复与明确需求内的改动，不得擅自重构认证流程、扩展凭据用途或删除保护逻辑。
 4. 未经需求明确，不新增外部服务依赖、不修改默认端口、不调整公开接口返回结构、不改变现有路由语义。
 5. 文档、测试、类型与实现应保持同步；如果本次任务只允许文档修改，则不得顺带改动业务代码。
@@ -166,8 +167,8 @@ npm run format
 ## 建议的开发流程
 
 1. 阅读相关模块现有实现。
-2. 在 `module/` 增加或调整接口能力。
-3. 在 `routers/context/` 接入 HTTP 控制器。
+2. 在 `src/services/` 增加或调整接口能力。
+3. 在 `src/controllers/` 接入 HTTP 控制器。
 4. 在路由层完成注册。
 5. 补充类型、测试与文档。
 6. 执行构建和测试，确认无误后再提交。

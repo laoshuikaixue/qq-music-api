@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../../koaApp';
+import app from '../../src/koaApp';
 
 describe('koaApp middleware order', () => {
 	let consoleLogSpy: ReturnType<typeof vi.spyOn>;

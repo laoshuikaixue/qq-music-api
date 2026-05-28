@@ -8,7 +8,7 @@ export default defineConfig({
 		include: ['tests/**/*.test.ts'],
 		coverage: {
 			provider: 'v8',
-			include: ['module/**/*.ts', 'routers/**/*.ts', 'util/**/*.ts', 'middlewares/**/*.ts'],
+			include: ['src/**/*.ts'],
 			exclude: ['**/node_modules/**', '**/tests/**', '**/dist/**', '**/*.d.ts', '**/types/**/*.ts'],
 			reporter: ['text', 'lcov', 'html', 'json-summary', 'json'],
 			thresholds: {
@@ -22,9 +22,10 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			'@module': resolve(__dirname, 'module'),
-			'@routers': resolve(__dirname, 'routers'),
-			'@util': resolve(__dirname, 'util'),
+			'@services': resolve(__dirname, 'src/services'),
+			'@routes': resolve(__dirname, 'src/routes'),
+			'@controllers': resolve(__dirname, 'src/controllers'),
+			'@util': resolve(__dirname, 'src/util'),
 		},
 	},
 });

@@ -19,8 +19,3 @@ export interface UserInfo {
 declare global {
   var userInfo: UserInfo;
 }
-
-/**
- * 导出类型供其他模块使用
- */
-export type { UserInfo };

@@ -1,3 +1,9 @@
+## 2.3.2 (2026-05-22)
+
+### Bug Fixes
+
+* support ESM/CJS and harden responses (#16) ([36dd7f9](https://github.com/sansenjian/qq-music-api/commit/36dd7f9c467ce73b7e06264f479ad41e1e1f9891))
+
 ## 2.3.1 (2026-05-17)
 
 
@@ -179,6 +185,3 @@
 * update google analysis id ([4b1ca9d](https://github.com/sansenjian/qq-music-api/commit/4b1ca9de2cd884f18724197f8cf20854334c0445))
 * update release automation workflow ([ad6871b](https://github.com/sansenjian/qq-music-api/commit/ad6871b11f732f1985d7e4199522c0257bdbaf57))
 * user cookie ([#32](https://github.com/sansenjian/qq-music-api/issues/32)) ([5a32dae](https://github.com/sansenjian/qq-music-api/commit/5a32daeca351c7b18352f9267db0c173fef9bff6))
-
-
-

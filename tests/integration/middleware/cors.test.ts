@@ -41,11 +41,10 @@ describe('CORS Middleware', () => {
     expect(next).toHaveBeenCalled();
   });
 
-  test('should preserve cross-origin access without credentials for custom origins', async () => {
+  test('should preserve cross-origin access for custom origins', async () => {
     const ctx = {
       method: 'GET',
       set: vi.fn(),
-      remove: vi.fn(),
       get: vi.fn().mockReturnValue('https://evil.example'),
       vary: vi.fn(),
       status: 200,
@@ -54,11 +53,10 @@ describe('CORS Middleware', () => {
 
     const next = vi.fn().mockResolvedValue(undefined);
 
-    await cors({ credentialOrigins: ['https://y.qq.com'], credentials: true })(ctx, next);
+    await cors()(ctx, next);
 
     expect(ctx.set).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'https://evil.example');
     expect(ctx.set).not.toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
-    expect(ctx.remove).toHaveBeenCalledWith('Access-Control-Allow-Credentials');
     expect(next).toHaveBeenCalled();
   });
 

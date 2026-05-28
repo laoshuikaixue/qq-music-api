@@ -18,6 +18,13 @@ const app = new Koa();
 const publicDir = fs.existsSync(path.join(__dirname, 'public'))
 	? path.join(__dirname, 'public')
 	: path.join(__dirname, '..', 'public');
+const credentialCorsOrigins = new Set([
+	'https://y.qq.com',
+	'https://c.y.qq.com',
+	'https://u.y.qq.com',
+	'http://localhost:3200',
+	'http://127.0.0.1:3200',
+]);
 
 global.userInfo = userInfoImport as UserInfo;
 
@@ -64,20 +71,19 @@ app.use(async (ctx, next) => {
 // CORS
 app.use(
 	cors({
-		credentialOrigins: [
-			'https://y.qq.com',
-			'https://c.y.qq.com',
-			'https://u.y.qq.com',
-			'http://localhost:3200',
-			'http://127.0.0.1:3200',
-		],
 		exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
 		maxAge: 5,
-		credentials: true,
 		allowMethods: ['GET', 'POST', 'DELETE'],
 		allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
 	}),
 );
+app.use(async (ctx, next) => {
+	const origin = ctx.get('Origin');
+	if (credentialCorsOrigins.has(origin)) {
+		ctx.set('Access-Control-Allow-Credentials', 'true');
+	}
+	await next();
+});
 
 app.use(securityHeaders());
 

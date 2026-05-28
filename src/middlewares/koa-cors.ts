@@ -2,7 +2,6 @@ import { Context, Next } from 'koa';
 
 export interface CorsOptions {
   origin?: string | string[] | ((ctx: Context) => string);
-  credentialOrigins?: string[];
   exposeHeaders?: string[];
   maxAge?: number;
   credentials?: boolean;
@@ -22,18 +21,6 @@ function resolveOrigin(ctx: Context, options: CorsOptions): string {
   }
 
   return options.origin || requestOrigin || '*';
-}
-
-function allowsCredentials(origin: string, options: CorsOptions): boolean {
-  if (options.credentials !== true || origin === '*') {
-    return false;
-  }
-
-  if (!options.credentialOrigins) {
-    return true;
-  }
-
-  return options.credentialOrigins.includes(origin);
 }
 
 function crossOrigin(options: CorsOptions = {}) {
@@ -63,7 +50,7 @@ function crossOrigin(options: CorsOptions = {}) {
         ctx.set('Access-Control-Max-Age', String(options.maxAge));
       }
 
-      if (allowsCredentials(origin, options)) {
+      if (options.credentials === true && origin !== '*') {
         ctx.set('Access-Control-Allow-Credentials', 'true');
       }
 
@@ -79,10 +66,8 @@ function crossOrigin(options: CorsOptions = {}) {
 
       ctx.status = 204;
     } else {
-      if (allowsCredentials(origin, options)) {
+      if (options.credentials === true && origin !== '*') {
         ctx.set('Access-Control-Allow-Credentials', 'true');
-      } else if (options.credentials === true) {
-        ctx.remove('Access-Control-Allow-Credentials');
       }
 
       if (options.exposeHeaders) {

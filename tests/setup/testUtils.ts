@@ -1,11 +1,11 @@
 /// <reference types="vitest/globals" />
 
 import Koa from 'koa';
-import bodyParser from '../../middlewares/body-parser';
-import router from '../../routers/router';
-import cors from '../../middlewares/koa-cors';
-import securityHeaders from '../../middlewares/security-headers';
-import type { UserInfo } from '../../types/global';
+import bodyParser from '../../src/middlewares/body-parser';
+import router from '../../src/routes/router';
+import cors from '../../src/middlewares/koa-cors';
+import securityHeaders from '../../src/middlewares/security-headers';
+import type { UserInfo } from '../../src/types/global';
 
 export function createTestApp() {
 	const app = new Koa();

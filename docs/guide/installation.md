@@ -31,7 +31,7 @@ npm install
 npm run dev
 ```
 
-开发模式默认使用 [`app.ts`](../../app.ts) 作为入口，服务启动后默认监听 `http://localhost:3200`。
+开发模式默认使用 [`src/app.ts`](../../src/app.ts) 作为入口，服务启动后默认监听 `http://localhost:3200`。
 
 ### 生产模式
 

@@ -1,6 +1,6 @@
-import { badRequest, customResponse, errorResponse, handleApi, successResponse } from '../../util/apiResponse';
-import { getGtk, getGuid, hash33 } from '../../util/loginUtils';
-import { Lyric, lyricParse } from '../../util/lyricParse';
+import { badRequest, customResponse, errorResponse, handleApi, successResponse } from '../../src/util/apiResponse';
+import { getGtk, getGuid, hash33 } from '../../src/util/loginUtils';
+import { Lyric, lyricParse } from '../../src/util/lyricParse';
 
 describe('util/apiResponse', () => {
   it('successResponse 应返回默认 200 状态和 response body', () => {

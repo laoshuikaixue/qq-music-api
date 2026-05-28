@@ -8,7 +8,7 @@
 
 ### 1. 统一的类型系统
 
-创建了 [`types/api.ts`](../types/api.ts) 文件，定义了所有 API 函数使用的通用类型：
+创建了 [`src/types/api.ts`](../src/types/api.ts) 文件，定义了所有 API 函数使用的通用类型：
 
 - `ApiResponse` - API 响应结构
 - `ApiOptions` - API 函数参数选项
@@ -16,7 +16,7 @@
 
 ### 2. API 响应工具函数
 
-创建了 [`util/apiResponse.ts`](../util/apiResponse.ts) 文件，提供了统一的 API 响应处理工具：
+创建了 [`src/util/apiResponse.ts`](../src/util/apiResponse.ts) 文件，提供了统一的 API 响应处理工具：
 
 - `successResponse()` - 创建成功响应
 - `errorResponse()` - 创建错误响应
@@ -26,7 +26,7 @@
 
 ### 3. Controller 工厂函数
 
-创建了 [`routers/util.ts`](../routers/util.ts) 文件，提供了创建 Controller 的工厂函数：
+创建了 [`src/controllers/util.ts`](../src/controllers/util.ts) 文件，提供了创建 Controller 的工厂函数：
 
 - `createController()` - 创建 GET 请求的 Controller
 - `createPostController()` - 创建 POST 请求的 Controller
@@ -36,35 +36,35 @@
 
 ### 4. 统一的全局类型
 
-创建了 [`types/global.d.ts`](../types/global.d.ts) 文件，定义了全局 `userInfo` 对象的类型。
+创建了 [`src/types/global.d.ts`](../src/types/global.d.ts) 文件，定义了全局 `userInfo` 对象的类型。
 
 ## 重构成果
 
 ### 已重构的文件
 
-**Module/APIs 目录（16 个文件）：**
-- `module/apis/singers/getSimilarSinger.ts`
-- `module/apis/singers/getSingerDesc.ts`
-- `module/apis/singers/getSingerMv.ts`
-- `module/apis/singers/getSingerStarNum.ts`
-- `module/apis/radio/getRadioLists.ts`
-- `module/apis/rank/getTopLists.ts`
-- `module/apis/music/getLyric.ts`
-- `module/apis/mv/getMvByTag.ts`
-- `module/apis/digitalAlbum/getDigitalAlbumLists.ts`
-- `module/apis/search/getHotKey.ts`
-- `module/apis/search/getSearchByKey.ts`
-- `module/apis/songLists/songLists.ts`
-- `module/apis/songLists/songListCategories.ts`
-- `module/apis/songLists/songListDetail.ts`
-- `module/apis/album/getAlbumInfo.ts`
-- `module/apis/comments/getComments.ts`
+**Services/APIs 目录（16 个文件）：**
+- `src/services/apis/singers/getSimilarSinger.ts`
+- `src/services/apis/singers/getSingerDesc.ts`
+- `src/services/apis/singers/getSingerMv.ts`
+- `src/services/apis/singers/getSingerStarNum.ts`
+- `src/services/apis/radio/getRadioLists.ts`
+- `src/services/apis/rank/getTopLists.ts`
+- `src/services/apis/music/getLyric.ts`
+- `src/services/apis/mv/getMvByTag.ts`
+- `src/services/apis/digitalAlbum/getDigitalAlbumLists.ts`
+- `src/services/apis/search/getHotKey.ts`
+- `src/services/apis/search/getSearchByKey.ts`
+- `src/services/apis/songLists/songLists.ts`
+- `src/services/apis/songLists/songListCategories.ts`
+- `src/services/apis/songLists/songListDetail.ts`
+- `src/services/apis/album/getAlbumInfo.ts`
+- `src/services/apis/comments/getComments.ts`
 
 **其他文件：**
-- `routers/types.ts` - 移除重复类型定义
+- `src/routes/types.ts` - 移除重复类型定义
 - `config/user-info.ts` - 统一类型定义
-- `app.ts` - 类型修复
-- `module/config.ts` - 类型修复
+- `src/app.ts` - 类型修复
+- `src/services/config.ts` - 类型修复
 
 ### 代码改进统计
 
@@ -78,9 +78,9 @@
 ### 创建新的 API 函数
 
 ```typescript
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
-import type { ApiOptions } from '../../../types/api';
+import request from '../../../src/util/request';
+import { handleApi } from '../../../src/util/apiResponse';
+import type { ApiOptions } from '../../../src/types/api';
 
 export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) => {
   const data = Object.assign(params, {
@@ -106,7 +106,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
 
 ```typescript
 import { createController, validateRequired } from './util';
-import { someApiFunction } from '../../module';
+import { someApiFunction } from '../services';
 
 // 简单情况
 export default createController(someApiFunction);
@@ -126,7 +126,7 @@ export default createController(
 ### 重构前（旧代码）- 约 35 行
 
 ```typescript
-import request from '../../../util/request';
+import request from '../../../src/util/request';
 
 export interface ApiOptions {
   method?: string;
@@ -181,9 +181,9 @@ export default ({ method = 'get', params = {}, option = {} }: ApiOptions): Promi
 ### 重构后（新代码）- 约 18 行
 
 ```typescript
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
-import type { ApiOptions } from '../../../types/api';
+import request from '../../../src/util/request';
+import { handleApi } from '../../../src/util/apiResponse';
+import type { ApiOptions } from '../../../src/types/api';
 
 export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) => {
   const data = Object.assign(params, {

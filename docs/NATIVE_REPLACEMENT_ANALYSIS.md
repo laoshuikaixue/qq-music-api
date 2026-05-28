@@ -18,7 +18,7 @@
 
 ### 现状
 
-`module/apis/y_common.ts` 和 `module/apis/u_common.ts` 直接依赖 `axios`，所有 API 调用经由此文件。
+`src/services/apis/y_common.ts` 和 `src/services/apis/u_common.ts` 直接依赖 `axios`，所有 API 调用经由此文件。
 
 ### 原生 `fetch` 替换方案
 
@@ -56,7 +56,7 @@ async function request<T>(config: RequestConfig): Promise<{ data: T; status: num
 
 ### 评估
 
-- **改动范围**: `module/apis/y_common.ts` 和 `module/apis/u_common.ts`（~60 行重写）
+- **改动范围**: `src/services/apis/y_common.ts` 和 `src/services/apis/u_common.ts`（~60 行重写）
 - **风险**: 中低。fetch API 在 Node 20.12+ 稳定
 - **收益**: 移除 axios 及其 ~7 个传递依赖
 

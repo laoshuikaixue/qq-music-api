@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
-import staticServe from '../../../middlewares/static-serve';
+import staticServe from '../../../src/middlewares/static-serve';
 
 const readStream = async (stream: Readable) => {
 	const chunks: Buffer[] = [];

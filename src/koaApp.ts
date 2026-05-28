@@ -64,7 +64,13 @@ app.use(async (ctx, next) => {
 // CORS
 app.use(
 	cors({
-		origin: ctx => ctx.request.header?.origin || '*',
+		origin: [
+			'https://y.qq.com',
+			'https://c.y.qq.com',
+			'https://u.y.qq.com',
+			'http://localhost:3200',
+			'http://127.0.0.1:3200',
+		],
 		exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
 		maxAge: 5,
 		credentials: true,

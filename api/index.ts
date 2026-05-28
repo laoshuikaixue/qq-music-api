@@ -1,4 +1,4 @@
-import app from '../koaApp';
+import app from '../src/koaApp';
 
 const handler = (app as any).callback();
 

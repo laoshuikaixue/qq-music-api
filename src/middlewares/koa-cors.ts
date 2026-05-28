@@ -9,18 +9,29 @@ export interface CorsOptions {
   allowHeaders?: string[];
 }
 
-function resolveOrigin(ctx: Context, options: CorsOptions): string {
+function resolveOrigin(ctx: Context, options: CorsOptions, credentialsEnabled: boolean): string {
   const requestOrigin = ctx.get('Origin');
 
   if (typeof options.origin === 'function') {
-    return options.origin(ctx);
+    const computedOrigin = options.origin(ctx);
+    if (credentialsEnabled && computedOrigin === 'null') {
+      return '';
+    }
+    return computedOrigin;
   }
 
   if (Array.isArray(options.origin)) {
     return requestOrigin && options.origin.includes(requestOrigin) ? requestOrigin : '';
   }
 
-  return options.origin || requestOrigin || '*';
+  if (typeof options.origin === 'string') {
+    if (credentialsEnabled && options.origin === 'null') {
+      return '';
+    }
+    return options.origin;
+  }
+
+  return '*';
 }
 
 function crossOrigin(options: CorsOptions = {}) {
@@ -33,7 +44,7 @@ function crossOrigin(options: CorsOptions = {}) {
   return async function cors(ctx: Context, next: Next) {
     ctx.vary('Origin');
 
-    const origin = resolveOrigin(ctx, options);
+    const origin = resolveOrigin(ctx, options, options.credentials === true);
 
     if (!origin) {
       return await next();

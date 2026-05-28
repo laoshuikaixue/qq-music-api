@@ -55,7 +55,7 @@ describe('CORS Middleware', () => {
 
     await cors()(ctx, next);
 
-    expect(ctx.set).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'https://evil.example');
+    expect(ctx.set).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
     expect(ctx.set).not.toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
     expect(next).toHaveBeenCalled();
   });

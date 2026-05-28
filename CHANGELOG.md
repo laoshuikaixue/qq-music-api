@@ -1,3 +1,9 @@
+## 2.3.3 (2026-05-28)
+
+### Code Refactoring
+
+* complete structure migration (#17) ([da92126](https://github.com/sansenjian/qq-music-api/commit/da9212607e58e56772e427e71b41328629686f39))
+
 ## 2.3.2 (2026-05-22)
 
 ### Bug Fixes

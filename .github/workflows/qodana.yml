@@ -4,13 +4,9 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'module/**'
-      - 'routers/**'
-      - 'util/**'
+      - 'src/**'
       - 'api/**'
-      - 'app.ts'
-      - 'koaApp.ts'
-      - 'index.ts'
+      - 'tests/**'
       - 'package.json'
       - 'tsconfig*.json'
       - 'qodana.yml'
@@ -20,13 +16,9 @@ on:
       - main
       - 'releases/*'
     paths:
-      - 'module/**'
-      - 'routers/**'
-      - 'util/**'
+      - 'src/**'
       - 'api/**'
-      - 'app.ts'
-      - 'koaApp.ts'
-      - 'index.ts'
+      - 'tests/**'
       - 'package.json'
       - 'tsconfig*.json'
       - 'qodana.yml'

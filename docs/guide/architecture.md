@@ -8,7 +8,7 @@
 
 ### 1. 统一的 API 类型定义
 
-**文件位置**: [`types/api.ts`](../../types/api.ts)
+**文件位置**: [`src/types/api.ts`](../../src/types/api.ts)
 
 定义了项目中所有 API 函数使用的通用类型：
 
@@ -49,7 +49,7 @@ export type ApiFunction<T extends ApiOptions = ApiOptions> = (
 
 ### 2. API 响应工具函数
 
-**文件位置**: [`util/apiResponse.ts`](../../util/apiResponse.ts)
+**文件位置**: [`src/util/apiResponse.ts`](../../src/util/apiResponse.ts)
 
 提供了统一的 API 响应处理工具：
 
@@ -114,7 +114,7 @@ export default async (options: ApiOptions) => {
 
 ### 3. Controller 工厂函数
 
-**文件位置**: [`routers/util.ts`](../../routers/util.ts)
+**文件位置**: [`src/controllers/util.ts`](../../src/controllers/util.ts)
 
 提供了创建 Controller 的工厂函数：
 
@@ -123,7 +123,7 @@ export default async (options: ApiOptions) => {
 
 ```typescript
 import { createController, validateRequired } from './util';
-import { getSingerDesc } from '../../module';
+import { getSingerDesc } from '../services';
 
 // 基本使用
 export default createController(getSingerDesc);
@@ -143,7 +143,7 @@ export default createController(
 
 ```typescript
 import { createPostController } from './util';
-import { batchGetSongLists } from '../../module';
+import { batchGetSongLists } from '../services';
 
 export default createPostController(batchGetSongLists);
 ```
@@ -169,7 +169,7 @@ export default createController(
 
 ### 4. 统一的全局类型
 
-**文件位置**: [`types/global.d.ts`](../../types/global.d.ts)
+**文件位置**: [`src/types/global.d.ts`](../../src/types/global.d.ts)
 
 定义了全局 `userInfo` 对象的类型：
 
@@ -199,7 +199,7 @@ declare global {
 ### 重构前（旧代码）
 
 ```typescript
-import request from '../../../util/request';
+import request from '../../../src/util/request';
 
 export interface ApiOptions {
   method?: string;
@@ -256,9 +256,9 @@ export default ({ method = 'get', params = {}, option = {} }: ApiOptions): Promi
 ### 重构后（新代码）
 
 ```typescript
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
-import type { ApiOptions } from '../../../types/api';
+import request from '../../../src/util/request';
+import { handleApi } from '../../../src/util/apiResponse';
+import type { ApiOptions } from '../../../src/types/api';
 
 export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) => {
   const data = Object.assign(params, {
@@ -294,7 +294,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
 
 ```typescript
 import { Context, Next } from 'koa';
-import { getSingerDesc } from '../../module';
+import { getSingerDesc } from '../services';
 
 export default async (ctx: Context, next: Next) => {
   const { singermid } = ctx.query;
@@ -322,7 +322,7 @@ export default async (ctx: Context, next: Next) => {
 
 ```typescript
 import { createController, validateRequired } from './util';
-import { getSingerDesc } from '../../module';
+import { getSingerDesc } from '../services';
 
 export default createController(
   getSingerDesc,
@@ -340,37 +340,37 @@ export default createController(
 
 ## 已重构的文件
 
-### Module/APIs 目录（16 个文件）
+### Services/APIs 目录（16 个文件）
 
-- `module/apis/singers/getSimilarSinger.ts`
-- `module/apis/singers/getSingerDesc.ts`
-- `module/apis/singers/getSingerMv.ts`
-- `module/apis/singers/getSingerStarNum.ts`
-- `module/apis/radio/getRadioLists.ts`
-- `module/apis/rank/getTopLists.ts`
-- `module/apis/music/getLyric.ts`
-- `module/apis/mv/getMvByTag.ts`
-- `module/apis/digitalAlbum/getDigitalAlbumLists.ts`
-- `module/apis/search/getHotKey.ts`
-- `module/apis/search/getSearchByKey.ts`
-- `module/apis/songLists/songLists.ts`
-- `module/apis/songLists/songListCategories.ts`
-- `module/apis/songLists/songListDetail.ts`
-- `module/apis/album/getAlbumInfo.ts`
-- `module/apis/comments/getComments.ts`
+- `src/services/apis/singers/getSimilarSinger.ts`
+- `src/services/apis/singers/getSingerDesc.ts`
+- `src/services/apis/singers/getSingerMv.ts`
+- `src/services/apis/singers/getSingerStarNum.ts`
+- `src/services/apis/radio/getRadioLists.ts`
+- `src/services/apis/rank/getTopLists.ts`
+- `src/services/apis/music/getLyric.ts`
+- `src/services/apis/mv/getMvByTag.ts`
+- `src/services/apis/digitalAlbum/getDigitalAlbumLists.ts`
+- `src/services/apis/search/getHotKey.ts`
+- `src/services/apis/search/getSearchByKey.ts`
+- `src/services/apis/songLists/songLists.ts`
+- `src/services/apis/songLists/songListCategories.ts`
+- `src/services/apis/songLists/songListDetail.ts`
+- `src/services/apis/album/getAlbumInfo.ts`
+- `src/services/apis/comments/getComments.ts`
 
-### Routers/Context 目录（部分文件）
+### Controllers 目录（部分文件）
 
-- `routers/context/getDownloadQQMusic.ts`
-- `routers/context/getSmartbox.ts`
-- `routers/context/cookies.ts`
+- `src/controllers/getDownloadQQMusic.ts`
+- `src/controllers/getSmartbox.ts`
+- `src/controllers/cookies.ts`
 
 ### 其他文件
 
-- `routers/types.ts` - 移除重复类型定义
+- `src/routes/types.ts` - 移除重复类型定义
 - `config/user-info.ts` - 统一类型定义
-- `app.ts` - 类型修复
-- `module/config.ts` - 类型修复
+- `src/app.ts` - 类型修复
+- `src/services/config.ts` - 类型修复
 
 ## 统计
 
@@ -384,9 +384,9 @@ export default createController(
 ### 1. 创建新的 API 函数
 
 ```typescript
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
-import type { ApiOptions } from '../../../types/api';
+import request from '../../../src/util/request';
+import { handleApi } from '../../../src/util/apiResponse';
+import type { ApiOptions } from '../../../src/types/api';
 
 export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) => {
   const data = Object.assign(params, {
@@ -419,7 +419,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
 
 ```typescript
 import { createController, validateRequired } from './util';
-import { someApiFunction } from '../../module';
+import { someApiFunction } from '../services';
 
 // 简单情况
 export default createController(someApiFunction);
@@ -437,7 +437,7 @@ export default createController(
 ### 3. 处理特殊响应
 
 ```typescript
-import { handleApi, customResponse } from '../../../util/apiResponse';
+import { handleApi, customResponse } from '../../../src/util/apiResponse';
 
 export default async (options: ApiOptions) => {
   try {
@@ -466,8 +466,8 @@ export default async (options: ApiOptions) => {
 
 2. **导入统一的类型和工具**
    ```typescript
-   import { handleApi } from '../../../util/apiResponse';
-   import type { ApiOptions } from '../../../types/api';
+   import { handleApi } from '../../../src/util/apiResponse';
+   import type { ApiOptions } from '../../../src/types/api';
    ```
 
 3. **重构为 async/await 语法**

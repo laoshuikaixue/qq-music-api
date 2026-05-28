@@ -19,7 +19,7 @@ vi.mock('axios', () => ({
 }));
 
 import type { AxiosRequestConfig } from 'axios';
-import request from '../../../util/request';
+import request from '../../../src/util/request';
 
 describe('request util', () => {
   beforeEach(() => {

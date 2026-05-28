@@ -105,13 +105,13 @@ curl -X POST "http://localhost:3200/checkQQLoginQr" \
 }
 ```
 
-这是因为项目中同时存在历史接口实现与迁移后的统一响应封装，后续新增能力建议优先复用 [`util/apiResponse.ts`](../../util/apiResponse.ts) 与 [`routers/util.ts`](../../routers/util.ts) 中的统一处理方式。
+这是因为项目中同时存在历史接口实现与迁移后的统一响应封装，后续新增能力建议优先复用 [`src/util/apiResponse.ts`](../../src/util/apiResponse.ts) 与 [`src/controllers/util.ts`](../../src/controllers/util.ts) 中的统一处理方式。
 
 ## 调试建议
 
 - 若接口依赖登录态，先配置 [`config/user-info.ts`](../../config/user-info.ts) 或使用扫码登录接口。
 - 若请求参数中包含 URL，建议使用 `curl -G --data-urlencode` 避免编码问题。
-- 如需查看全部接口，可直接阅读 [`routers/router.ts`](../../routers/router.ts)。
+- 如需查看全部接口，可直接阅读 [`src/routes/router.ts`](../../src/routes/router.ts)。
 
 ## 下一步
 

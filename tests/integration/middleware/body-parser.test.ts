@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import bodyParser from '../../../middlewares/body-parser';
+import bodyParser from '../../../src/middlewares/body-parser';
 
 const createCtx = (body: string, contentType: string) =>
 	({

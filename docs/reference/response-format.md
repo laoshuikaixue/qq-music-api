@@ -63,9 +63,9 @@
 
 统一封装能力主要围绕以下代码组织：
 
-- [`util/apiResponse.ts`](../../util/apiResponse.ts)
-- [`routers/util.ts`](../../routers/util.ts)
-- [`types/api.ts`](../../types/api.ts)
+- [`src/util/apiResponse.ts`](../../src/util/apiResponse.ts)
+- [`src/controllers/util.ts`](../../src/controllers/util.ts)
+- [`src/types/api.ts`](../../src/types/api.ts)
 
 ## 相关文档
 

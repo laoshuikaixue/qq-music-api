@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
-import cookieMiddleware from '../../../util/cookie';
-import type { UserInfo } from '../../../types/global';
+import cookieMiddleware from '../../../src/util/cookie';
+import type { UserInfo } from '../../../src/types/global';
 
 describe('util/cookie middleware', () => {
   let mockCtx: any;
@@ -31,7 +31,7 @@ describe('util/cookie middleware', () => {
   });
 
   test('should be a function that returns a middleware function', () => {
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     expect(typeof middleware).toBe('function');
   });
 
@@ -44,7 +44,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.request.cookie).toBe('test_cookie=value123');
@@ -59,7 +59,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.request.cookie).toBeUndefined();
@@ -78,7 +78,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.cookies.set).toHaveBeenCalledWith('qqmusic_key', 'abc123', expect.any(Object));
@@ -95,7 +95,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.cookies.set).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.cookies.set).toHaveBeenCalledWith('qqmusic_key', 'value=with=equals', expect.any(Object));
@@ -125,7 +125,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.cookies.set).toHaveBeenCalledWith('qqmusic_uin', '123', expect.any(Object));
@@ -141,7 +141,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.cookies.set).toHaveBeenCalledWith('qqmusic_key', 'value123', expect.any(Object));
@@ -156,7 +156,7 @@ describe('util/cookie middleware', () => {
       refreshData: () => {}
     };
 
-    const middleware = cookieMiddleware();
+    const middleware = cookieMiddleware({ useGlobalCookie: true });
     await middleware(mockCtx, mockNext);
 
     expect(mockCtx.cookies.set).toHaveBeenCalledWith(

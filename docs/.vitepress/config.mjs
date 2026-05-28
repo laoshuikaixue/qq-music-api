@@ -64,6 +64,8 @@ export default defineConfig({
         text: '开发与维护',
         items: [
           { text: '响应格式', link: '/reference/response-format' },
+          { text: '配置规范', link: '/guide/configuration-policy' },
+          { text: 'MCP 与 CLI 拓展思考', link: '/guide/mcp-cli-extension' },
           { text: '代码架构', link: '/guide/architecture' },
         ],
       },

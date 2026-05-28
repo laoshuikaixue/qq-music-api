@@ -1,4 +1,4 @@
-import { extractCookieValue, extractUinFromCookie } from '../../../util/cookieResolver';
+import { extractCookieValue, extractUinFromCookie } from '../../../src/util/cookieResolver';
 
 describe('util/cookieResolver cookie value parsing', () => {
   test('should extract a named cookie value', () => {

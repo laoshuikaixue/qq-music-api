@@ -1,6 +1,6 @@
 // CORS 中间件单元测试
 
-import cors from '../../../middlewares/koa-cors';
+import cors from '../../../src/middlewares/koa-cors';
 
 describe('CORS Middleware', () => {
   test('should set CORS headers', async () => {

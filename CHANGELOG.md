@@ -1,3 +1,9 @@
+## 2.3.4 (2026-06-01)
+
+### Other Changes
+
+* promote dev changes to main (#20) ([add5156](https://github.com/sansenjian/qq-music-api/commit/add5156c2b91f1066196e9837dd8eb6719476e66))
+
 ## 2.3.3 (2026-05-28)
 
 ### Code Refactoring

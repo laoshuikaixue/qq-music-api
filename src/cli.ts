@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { getConfigDir, resolveConfigPath } from './config/config-path';
 import { getUserInfo, setUserInfo } from './config/user-info-store';
 import type { UserInfo } from './types';
+import { getCookieKeys } from './util/cookieResolver';
 import pkg from '../package.json';
 
 interface CliIo {
@@ -105,6 +106,28 @@ const printError = (io: CliIo, json: boolean, code: string, message: string): nu
 	return 1;
 };
 
+const redirectConsoleOutputToStderr = (): (() => void) => {
+	const originalLog = console.log;
+	const originalInfo = console.info;
+	const originalWarn = console.warn;
+	const originalDebug = console.debug;
+	const stderrLog = (...args: unknown[]) => {
+		console.error(...args);
+	};
+
+	console.log = stderrLog;
+	console.info = stderrLog;
+	console.warn = stderrLog;
+	console.debug = stderrLog;
+
+	return () => {
+		console.log = originalLog;
+		console.info = originalInfo;
+		console.warn = originalWarn;
+		console.debug = originalDebug;
+	};
+};
+
 const helpText = () => `QQ Music API CLI
 
 Usage:
@@ -114,6 +137,7 @@ Usage:
   qq-music-api doctor [--json]
   qq-music-api auth status [--json]
   qq-music-api auth clear [--json]
+  qq-music-api mcp start
 
 Options:
   --json             Output stable machine-readable JSON for supported commands.
@@ -124,6 +148,7 @@ Options:
 Notes:
   Running qq-music-api with no command keeps the legacy behavior and starts the HTTP service.
   Auth commands never print the full Cookie value.
+  MCP uses stdio; do not pipe normal logs to stdout while it is running.
 `;
 
 const getPathPayload = () => {
@@ -153,16 +178,6 @@ const readJsonFileStatus = (filePath: string): JsonFileStatus => {
 			error: error instanceof Error ? error.message : 'Invalid JSON',
 		};
 	}
-};
-
-const getCookieKeys = (cookie: string | undefined): string[] => {
-	if (!cookie) return [];
-	return cookie
-		.split(';')
-		.map(item => item.trim())
-		.filter(Boolean)
-		.map(item => item.slice(0, item.indexOf('=')).trim())
-		.filter(Boolean);
 };
 
 const checkWritable = (configDir: string) => {
@@ -311,6 +326,24 @@ export const runCli = async (argv: string[] = process.argv.slice(2), io: CliIo =
 			const payload = clearAuth();
 			if (parsed.json) printJson(io, payload);
 			else io.stdout(`Cleared auth state at ${payload.userInfoPath}`);
+			return 0;
+		}
+
+		if (command === 'mcp' && (subcommand === 'start' || subcommand === undefined)) {
+			const restoreConsoleOutput = redirectConsoleOutputToStderr();
+			const restoreOnProcessExit = () => {
+				restoreConsoleOutput();
+			};
+			process.once('exit', restoreOnProcessExit);
+
+			try {
+				const { runMcpServer } = await import('./mcp/server');
+				await runMcpServer();
+			} catch (error) {
+				process.off('exit', restoreOnProcessExit);
+				restoreConsoleOutput();
+				throw error;
+			}
 			return 0;
 		}
 

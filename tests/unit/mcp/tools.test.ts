@@ -4,7 +4,7 @@ import {
 	createQqMusicMcpHandlers,
 	type QqMusicMcpServices,
 	type QqMusicToolPayload,
-} from '../../../src/mcp/tools';
+} from '../../../packages/mcp/src/tools';
 
 const okResponse = (data: unknown) => ({
 	status: 200,
@@ -80,7 +80,6 @@ describe('MCP tool handlers', () => {
 			keyword: 'jay',
 			page: 2,
 			limit: 5,
-			remoteplace: 'song',
 			response_format: 'json',
 		});
 

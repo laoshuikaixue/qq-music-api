@@ -47,6 +47,13 @@ const getPackageBinEntry = () => {
 	return path.join(projectRoot, packageJson.bin['qq-music-api']);
 };
 
+const getMcpPackageBinEntry = () => {
+	const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'packages', 'mcp', 'package.json'), 'utf8')) as {
+		bin: Record<string, string>;
+	};
+	return path.join(projectRoot, 'packages', 'mcp', packageJson.bin['qq-music-api-mcp']);
+};
+
 const writeTypesFixture = () => {
 	fs.rmSync(typesDir, { recursive: true, force: true });
 	fs.mkdirSync(typesDir, { recursive: true });
@@ -60,6 +67,20 @@ const writeTypesFixture = () => {
 			'const typedApp: Koa = app;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
 			'void callback;',
+			'',
+		].join('\n'),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'mcp-consumer.mts'),
+		[
+			"import { createQqMusicMcpServer, runMcpServer } from '@sansenjian/qq-music-api-mcp';",
+			"import type { QqMusicToolPayload } from '@sansenjian/qq-music-api-mcp';",
+			'',
+			"const payload: QqMusicToolPayload = { ok: true, tool: 'typed-mcp' };",
+			'const server = createQqMusicMcpServer();',
+			'void payload;',
+			'void server;',
+			'void runMcpServer;',
 			'',
 		].join('\n'),
 	);
@@ -114,6 +135,46 @@ const writeTypesFixture = () => {
 					types: ['node'],
 				},
 				include: ['esm-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.mcp-node16.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'Node16',
+					moduleResolution: 'Node16',
+					strict: true,
+					noEmit: true,
+					ignoreDeprecations: '6.0',
+					skipLibCheck: true,
+					types: ['node'],
+				},
+				include: ['mcp-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.mcp-bundler.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'ESNext',
+					moduleResolution: 'Bundler',
+					strict: true,
+					noEmit: true,
+					ignoreDeprecations: '6.0',
+					skipLibCheck: true,
+					types: ['node'],
+				},
+				include: ['mcp-consumer.mts'],
 			},
 			null,
 			2,
@@ -228,6 +289,12 @@ describe('Package Entry Compatibility', () => {
 		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
 	});
 
+	test('should emit a node shebang on the MCP package bin entry', () => {
+		const binEntry = getMcpPackageBinEntry();
+
+		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
+	});
+
 	test(
 		'should start the CLI when invoked through a symlinked bin path',
 		async () => {
@@ -242,23 +309,36 @@ describe('Package Entry Compatibility', () => {
 		60_000,
 	);
 
+	test('should start the MCP CLI when invoked through a symlinked bin path', async () => {
+		fs.mkdirSync(outputDir, { recursive: true });
+		const realEntry = getMcpPackageBinEntry();
+		const symlinkEntry = path.join(outputDir, 'qq-music-api-mcp-bin.mjs');
+		fs.rmSync(symlinkEntry, { force: true });
+		fs.symlinkSync(realEntry, symlinkEntry);
+
+		const { stdout } = await runNode([symlinkEntry, '--help']);
+
+		expect(stdout).toContain('qq-music-api-mcp');
+	});
+
 	test('should print CLI help without starting the service', async () => {
 		const { stdout } = await runNode([getPackageBinEntry(), '--help']);
 
 		expect(stdout).toContain('qq-music-api config doctor');
 		expect(stdout).toContain('qq-music-api auth status');
-		expect(stdout).toContain('qq-music-api mcp start');
+		expect(stdout).toContain('@sansenjian/qq-music-api-mcp');
+		expect(stdout).not.toContain('qq-music-api mcp start');
 	});
 
 	test(
-		'should expose MCP tools over stdio through the CLI',
+		'should expose MCP tools over stdio through the MCP package CLI',
 		async () => {
 			fs.mkdirSync(configDir, { recursive: true });
 			fs.writeFileSync(path.join(configDir, 'service-config.json'), '{ invalid json', 'utf-8');
 
 			const transport = new StdioClientTransport({
 				command: process.execPath,
-				args: [getPackageBinEntry(), 'mcp', 'start'],
+				args: [getMcpPackageBinEntry()],
 				cwd: projectRoot,
 				env: {
 					...process.env,
@@ -289,6 +369,7 @@ describe('Package Entry Compatibility', () => {
 						response_format: expect.any(Object),
 					},
 				});
+				expect(searchTool?.inputSchema.properties).not.toHaveProperty('remoteplace');
 				expect(searchTool?.outputSchema).toMatchObject({
 					type: 'object',
 					properties: {
@@ -430,6 +511,26 @@ describe('Package Entry Compatibility', () => {
 			writeTypesFixture();
 
 			await runTsc(path.join(typesDir, 'tsconfig.bundler.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose Node16-compatible types for MCP ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.mcp-node16.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose bundler-compatible types for MCP ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.mcp-bundler.json'));
 		},
 		60_000,
 	);

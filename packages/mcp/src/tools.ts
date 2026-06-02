@@ -1,18 +1,22 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { getConfigDir, resolveConfigPath } from '../config/config-path';
-import { getUserInfo } from '../config/user-info-store';
-import { apiMetadata } from '../routes/api-metadata';
 import {
 	getAlbumInfo,
 	getHotKey,
 	getSearchByKey,
 	getTopLists,
+	getConfigDir,
+	getCookieKeys,
+	getUserInfo,
+	resolveConfigPath,
+	apiMetadata,
 	songListDetail,
-} from '../services';
-import type { ApiResponse } from '../types/api';
-import { getCookieKeys } from '../util/cookieResolver';
+	type ApiCatalogEntry,
+	type ServiceCall,
+	type ServiceResponse,
+	type UserInfoSnapshot,
+} from './root-compat';
 
 const CHARACTER_LIMIT = 24_000;
 const ERROR_MESSAGE_LIMIT = 2_000;
@@ -53,7 +57,6 @@ interface SearchSongsInput extends CommonInput {
 	keyword: string;
 	page?: number;
 	limit?: number;
-	remoteplace?: 'song' | 'album' | 'mv' | 'singer' | 'smartbox';
 }
 
 interface PlaylistDetailInput extends CommonInput {
@@ -63,14 +66,6 @@ interface PlaylistDetailInput extends CommonInput {
 interface AlbumInfoInput extends CommonInput {
 	albummid: string;
 }
-
-interface ServiceCallOptions {
-	method?: string;
-	params?: Record<string, unknown>;
-	option?: Record<string, unknown>;
-}
-
-type ServiceCall = (options: ServiceCallOptions) => Promise<ApiResponse>;
 
 export interface QqMusicMcpServices {
 	getAlbumInfo: ServiceCall;
@@ -157,20 +152,20 @@ const errorResult = (tool: string, error: unknown, responseFormat: ResponseForma
 	return createToolResult(payload, responseFormat, `Error: ${message}`);
 };
 
-const extractResponseData = (response: ApiResponse): unknown => {
+const extractResponseData = (response: ServiceResponse): unknown => {
 	if ('response' in response.body) return response.body.response;
 	if ('data' in response.body) return response.body.data;
 	return response.body;
 };
 
-const extractResponseError = (response: ApiResponse): unknown => {
+const extractResponseError = (response: ServiceResponse): unknown => {
 	if ('error' in response.body) return response.body.error;
 	return undefined;
 };
 
 const serviceResult = (
 	tool: string,
-	response: ApiResponse,
+	response: ServiceResponse,
 	responseFormat: ResponseFormat,
 	title: string,
 ): CallToolResult => {
@@ -204,13 +199,7 @@ const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
 		count: number;
 		offset: number;
 		limit: number;
-		items: Array<{
-			name: string;
-			category: string;
-			method: string;
-			path: string;
-			cookieRequired?: boolean;
-		}>;
+		items: ApiCatalogEntry[];
 	};
 
 	const lines = [
@@ -262,7 +251,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 
 	getAuthStatus: async (input: CommonInput): Promise<CallToolResult> => {
 		const responseFormat = getResponseFormat(input);
-		const userInfo = getUserInfo();
+		const userInfo: UserInfoSnapshot = getUserInfo();
 		const keys = getCookieKeys(userInfo.cookie);
 		const data = {
 			authenticated: Boolean(userInfo.cookie && (userInfo.uin || userInfo.loginUin)),
@@ -341,7 +330,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 					n: Math.min(Math.max(input.limit || 10, 1), 50),
 					p: Math.max(input.page || 1, 1),
 					catZhida: 1,
-					remoteplace: `txt.yqq.${input.remoteplace || 'song'}`,
+					remoteplace: 'txt.yqq.song',
 				},
 				option: {},
 			});
@@ -469,15 +458,11 @@ export const registerQqMusicMcpTools = (
 		'qq_music_search_songs',
 		{
 			title: 'Search QQ Music Songs',
-			description: 'Search public QQ Music results by keyword. Does not require or expose cookies.',
+			description: 'Search public QQ Music songs by keyword. Does not require or expose cookies.',
 			inputSchema: {
 				keyword: z.string().min(1).max(100).describe('Search keyword, for example a song title or artist name.'),
 				page: z.number().int().min(1).default(1).describe('Result page number, starting from 1.'),
 				limit: z.number().int().min(1).max(50).default(10).describe('Maximum results per page.'),
-				remoteplace: z
-					.enum(['song', 'album', 'mv', 'singer', 'smartbox'])
-					.default('song')
-					.describe('QQ Music search scope.'),
 				response_format: responseFormatField,
 			},
 			outputSchema: mcpOutputShape,

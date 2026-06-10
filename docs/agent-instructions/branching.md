@@ -2,7 +2,7 @@
 
 ## Overview
 
-Use this file when creating branches, opening pull requests, or resolving `dev` and `main` divergence.
+Use this file when creating branches, opening pull requests, or deciding how `dev` and `main` should move.
 
 ## Branch Roles
 
@@ -18,27 +18,56 @@ Use this file when creating branches, opening pull requests, or resolving `dev` 
 3. Use a project-scoped branch name such as `feat/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...`, or `sync/...`.
 4. Implement and validate the change on the topic branch.
 5. Open a pull request back into `dev`.
-6. Merge into `dev` only after the expected checks and review pass.
+6. Confirm the `Dev Version Line` check passes; it verifies the PR result uses the same `<manual>.<main>` version line as `origin/main`.
+7. Merge into `dev` only after the expected checks and review pass.
 
 ## Promoting Dev to Main
 
 When `dev` is stable, promote it through a pull request into `main`.
 
-Recommended conflict-safe flow:
+Default flow:
+
+1. Sync `origin/dev` and `origin/main`.
+2. Open a pull request from `dev` into `main`.
+3. Confirm GitHub reports the pull request as mergeable.
+4. Run or wait for the required checks.
+5. Merge the pull request into `main`.
+
+Use this direct `dev -> main` pull request whenever it is clean and mergeable.
+
+## Conflict Flow
+
+Use a temporary sync branch only when `dev -> main` cannot be merged cleanly or needs manual conflict resolution.
 
 1. Sync `origin/main` and `origin/dev`.
-2. Create a promotion branch from `origin/main`, for example `sync/dev-to-main`.
-3. Merge `origin/dev` into the promotion branch.
+2. Create a sync branch from `origin/main`, for example `sync/dev-to-main`.
+3. Merge `origin/dev` into the sync branch.
 4. Resolve conflicts intentionally.
 5. Run required validation.
-6. Open a pull request from the promotion branch into `main`.
+6. Open a pull request from the sync branch into `main`.
 
-This keeps `dev` available for continued integration work while the release promotion is reviewed.
+This is an exception path for conflicts, not the default release path.
+
+## After Main Changes
+
+If `main` receives changes that are not already in `dev`, bring them back to `dev`.
+
+Common examples:
+
+- version bumps
+- `CHANGELOG.md` updates
+- release workflow outputs
+- stable-branch hotfixes
+- conflict-resolution fixes made during a `dev -> main` promotion
+
+Use a small sync branch from `dev` and open a pull request back into `dev` when needed.
+
+If a pull request into `dev` fails the `Dev Version Line` check, sync the main release version metadata back into `dev` before merging new feature work.
 
 ## Conflict Resolution Policy
 
 - Preserve `main` release metadata when promoting to `main`, including version bumps, `CHANGELOG.md`, and release workflow outputs.
-- Preserve ESM/CJS package-entry fixes from `main` unless the replacement is a verified superset.
+- Preserve ESM/CJS package-entry fixes unless the replacement is a verified superset.
 - Preserve `dev` feature implementation when promoting stable work, including CLI, framework, route, and test improvements.
 - Do not downgrade `package.json` or `package-lock.json` versions during promotion.
 - Do not commit regenerated `docs/public/version.json` unless the task is explicitly a version or release update.
@@ -51,7 +80,7 @@ After merging a hotfix into `main`, backport or merge it into `dev` so future de
 
 ## Validation
 
-Before opening a branch promotion PR, run:
+Before opening a release or sync pull request, run:
 
 - `npm run build`
 - `npm run test`

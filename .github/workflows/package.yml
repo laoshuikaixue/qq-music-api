@@ -7,6 +7,19 @@ on:
         description: 'Tag to release (e.g., v1.0.0). Leave empty to use version from package.json'
         required: false
         type: string
+      channel:
+        description: 'Manual release channel. auto uses beta on dev and latest for version tags/main.'
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - beta
+          - latest
+
+concurrency:
+  group: package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -19,8 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag || '' }}
+          ref: ${{ github.event.inputs.tag || '' }}
           fetch-tags: true
+          fetch-depth: 0
 
       - name: Setup Node.js for NPM
         uses: actions/setup-node@v6
@@ -32,16 +46,136 @@ jobs:
       - name: Setup npm 11
         run: bash .github/scripts/setup-npm.sh 11.14.1
 
-      - name: Determine version to publish
-        id: version
+      - name: Determine release channel and version
+        id: release
+        shell: bash
         run: |
-          if [ -n "${{ inputs.tag }}" ]; then
-            echo "Using provided tag: ${{ inputs.tag }}"
-            echo "version=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          INPUT_TAG="${{ github.event.inputs.tag || '' }}"
+          INPUT_CHANNEL="${{ github.event.inputs.channel || 'auto' }}"
+          CHANNEL="$INPUT_CHANNEL"
+
+          if [ "$CHANNEL" = "auto" ]; then
+            if [ -n "$INPUT_TAG" ] || [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+              CHANNEL="latest"
+            elif [[ "$GITHUB_REF" == refs/heads/dev ]]; then
+              CHANNEL="beta"
+            elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+              CHANNEL="latest"
+            else
+              echo "Unable to infer release channel for $GITHUB_REF. Set workflow_dispatch channel explicitly."
+              exit 1
+            fi
+          fi
+
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          if [ "$CHANNEL" = "beta" ]; then
+            PACKAGE_NAME=$(node -p "require('./package.json').name")
+            NPM_LATEST_VERSION=""
+            NPM_BETA_VERSION=""
+            MAIN_VERSION=""
+            if NPM_LATEST_VERSION=$(npm view "$PACKAGE_NAME@latest" version 2>/dev/null); then
+              echo "npm latest version: $NPM_LATEST_VERSION"
+            else
+              echo "Unable to read npm latest version for $PACKAGE_NAME. Falling back to package.json version."
+            fi
+            if NPM_BETA_VERSION=$(npm view "$PACKAGE_NAME@beta" version 2>/dev/null); then
+              echo "npm beta version: $NPM_BETA_VERSION"
+            else
+              echo "Unable to read npm beta version for $PACKAGE_NAME. Falling back to local/latest versions."
+            fi
+            if git fetch origin main:refs/remotes/origin/main && MAIN_VERSION=$(git show origin/main:package.json | node -e "const fs = require('node:fs'); console.log(JSON.parse(fs.readFileSync(0, 'utf8')).version)"); then
+              echo "main branch version: $MAIN_VERSION"
+            else
+              echo "Unable to read origin/main package version. Falling back to local/npm versions."
+            fi
+            PUBLISH_VERSION=$(node scripts/compute-release-version.mjs "$CURRENT_VERSION" "$NPM_LATEST_VERSION" "$NPM_BETA_VERSION" "$MAIN_VERSION")
+            npm pkg set version="$PUBLISH_VERSION"
+            npm pkg set version="$PUBLISH_VERSION" --workspace @sansenjian/qq-music-api-mcp
+            NPM_TAG="beta"
+          elif [ "$CHANNEL" = "latest" ]; then
+            PUBLISH_VERSION="$CURRENT_VERSION"
+            NPM_TAG="latest"
+            MCP_VERSION=$(node -p "require('./packages/mcp/package.json').version")
+            if [ "$MCP_VERSION" != "$PUBLISH_VERSION" ]; then
+              echo "MCP package version $MCP_VERSION does not match root package version $PUBLISH_VERSION."
+              exit 1
+            fi
+            if [[ "$PUBLISH_VERSION" == *-* ]]; then
+              echo "Latest releases must use a stable numeric version, got $PUBLISH_VERSION."
+              exit 1
+            fi
+            TAG_REF="$INPUT_TAG"
+            if [ -z "$TAG_REF" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+              TAG_REF="${GITHUB_REF#refs/tags/}"
+            fi
+            if [ -n "$TAG_REF" ]; then
+              TAG_VERSION="${TAG_REF#v}"
+              if [ "$TAG_VERSION" != "$PUBLISH_VERSION" ]; then
+                echo "Release tag $TAG_REF does not match package.json version $PUBLISH_VERSION."
+                exit 1
+              fi
+            fi
           else
-            VERSION=$(node -p "require('./package.json').version")
-            echo "No tag provided, using package.json version: v$VERSION"
-            echo "version=v$VERSION" >> $GITHUB_OUTPUT
+            echo "Unsupported release channel: $CHANNEL"
+            exit 1
+          fi
+
+          echo "Release channel: $CHANNEL"
+          echo "npm dist-tag: $NPM_TAG"
+          echo "Version to publish: $PUBLISH_VERSION"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$PUBLISH_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure beta releases come from dev
+        if: steps.release.outputs.channel == 'beta'
+        shell: bash
+        run: |
+          git fetch origin dev:refs/remotes/origin/dev
+
+          if [[ "$GITHUB_REF" != refs/heads/dev ]]; then
+            echo "Beta releases must run from refs/heads/dev."
+            exit 1
+          fi
+
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/dev)" ]; then
+            echo "Beta releases must run from the current origin/dev HEAD."
+            exit 1
+          fi
+
+      - name: Ensure latest releases come from main
+        if: steps.release.outputs.channel == 'latest'
+        shell: bash
+        run: |
+          git fetch origin main:refs/remotes/origin/main --tags
+
+          TAG_REF="${{ github.event.inputs.tag || '' }}"
+          if [ -z "$TAG_REF" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG_REF="${GITHUB_REF#refs/tags/}"
+          fi
+
+          if [ -n "$TAG_REF" ]; then
+            TAG_COMMIT="$(git rev-list -n 1 "$TAG_REF")"
+            HEAD_COMMIT="$(git rev-parse HEAD)"
+
+            if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+              echo "Latest tag release must checkout $TAG_REF. HEAD is $HEAD_COMMIT, tag is $TAG_COMMIT."
+              exit 1
+            fi
+
+            if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+              echo "Latest release tag $TAG_REF must point to a commit contained in origin/main."
+              exit 1
+            fi
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+              echo "Latest branch release must run from the current origin/main HEAD."
+              exit 1
+            fi
+          else
+            echo "Latest releases must come from refs/heads/main or a version tag on main."
+            exit 1
           fi
 
       - name: Install dependencies
@@ -64,8 +198,13 @@ jobs:
       - name: Generate CHANGELOG
         run: npm run changelog
 
-      - name: Publish to NPM
-        run: npm publish --access public --provenance
+      - name: Publish core package to NPM
+        run: npm publish --access public --tag ${{ steps.release.outputs.npm_tag }} --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish MCP package to NPM
+        run: npm publish --workspace @sansenjian/qq-music-api-mcp --access public --tag ${{ steps.release.outputs.npm_tag }} --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -79,7 +218,12 @@ jobs:
       - name: Setup npm 11 for GitHub Packages
         run: bash .github/scripts/setup-npm.sh 11.14.1
 
-      - name: Publish to GitHub Packages
-        run: npm publish --access public
+      - name: Publish core package to GitHub Packages
+        run: npm publish --access public --tag ${{ steps.release.outputs.npm_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+
+      - name: Publish MCP package to GitHub Packages
+        run: npm publish --workspace @sansenjian/qq-music-api-mcp --access public --tag ${{ steps.release.outputs.npm_tag }}
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}

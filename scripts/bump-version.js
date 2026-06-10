@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import { computeMainVersion } from './compute-release-version.mjs';
 
 console.log('Bumping version in package.json...');
 
@@ -8,13 +9,23 @@ try {
 	const oldVersion = pkg.version;
 	console.log(`Current version: ${oldVersion}`);
 
-	execSync('npm version patch --no-git-tag-version --ignore-scripts', {
-		stdio: 'inherit',
-	});
-
-	const newPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-	const newVersion = newPkg.version;
+	const newVersion = computeMainVersion(oldVersion);
+	pkg.version = newVersion;
+	fs.writeFileSync('package.json', `${JSON.stringify(pkg, null, '\t')}\n`);
 	console.log(`Version bumped to ${newVersion}`);
+
+	const mcpPackagePath = 'packages/mcp/package.json';
+	if (fs.existsSync(mcpPackagePath)) {
+		console.log('Syncing MCP package version...');
+		const mcpPkg = JSON.parse(fs.readFileSync(mcpPackagePath, 'utf8'));
+		mcpPkg.version = newVersion;
+		fs.writeFileSync(mcpPackagePath, `${JSON.stringify(mcpPkg, null, '\t')}\n`);
+		console.log(`MCP package version synced to ${newVersion}`);
+
+		console.log('Refreshing package lock...');
+		execSync('npm install --package-lock-only --ignore-scripts', { stdio: 'inherit' });
+		console.log('Package lock refreshed successfully');
+	}
 
 	console.log('Generating CHANGELOG...');
 	execSync('npm run changelog', { stdio: 'inherit' });

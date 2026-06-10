@@ -2,6 +2,8 @@ import { exec, execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -45,6 +47,13 @@ const getPackageBinEntry = () => {
 	return path.join(projectRoot, packageJson.bin['qq-music-api']);
 };
 
+const getMcpPackageBinEntry = () => {
+	const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'packages', 'mcp', 'package.json'), 'utf8')) as {
+		bin: Record<string, string>;
+	};
+	return path.join(projectRoot, 'packages', 'mcp', packageJson.bin['qq-music-api-mcp']);
+};
+
 const writeTypesFixture = () => {
 	fs.rmSync(typesDir, { recursive: true, force: true });
 	fs.mkdirSync(typesDir, { recursive: true });
@@ -53,11 +62,35 @@ const writeTypesFixture = () => {
 		path.join(typesDir, 'esm-consumer.mts'),
 		[
 			"import app from '@sansenjian/qq-music-api';",
+			"import { getMusicPlay } from '@sansenjian/qq-music-api/services';",
+			"import { checkQQLoginQr, getLyric, getMusicPlay as sdkGetMusicPlay, getQQLoginQr, search } from '@sansenjian/qq-music-api/sdk';",
 			"import type Koa = require('koa');",
 			'',
 			'const typedApp: Koa = app;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'const serviceResult = getMusicPlay({ params: { songmid: "003rJSwm3TechU" } });',
+			'const sdkResult = search({ key: "周杰伦" });',
 			'void callback;',
+			'void serviceResult;',
+			'void sdkResult;',
+			'void sdkGetMusicPlay;',
+			'void getLyric;',
+			'void getQQLoginQr;',
+			'void checkQQLoginQr;',
+			'',
+		].join('\n'),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'mcp-consumer.mts'),
+		[
+			"import { createQqMusicMcpServer, runMcpServer } from '@sansenjian/qq-music-api-mcp';",
+			"import type { QqMusicToolPayload } from '@sansenjian/qq-music-api-mcp';",
+			'',
+			"const payload: QqMusicToolPayload = { ok: true, tool: 'typed-mcp' };",
+			'const server = createQqMusicMcpServer();',
+			'void payload;',
+			'void server;',
+			'void runMcpServer;',
 			'',
 		].join('\n'),
 	);
@@ -65,11 +98,21 @@ const writeTypesFixture = () => {
 		path.join(typesDir, 'cjs-consumer.cts'),
 		[
 			"import app = require('@sansenjian/qq-music-api');",
+			"import { getMusicPlay } from '@sansenjian/qq-music-api/services';",
+			"import { checkQQLoginQr, getLyric, getMusicPlay as sdkGetMusicPlay, getQQLoginQr, search } from '@sansenjian/qq-music-api/sdk';",
 			"import type Koa = require('koa');",
 			'',
 			'const typedApp: Koa = app;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'const serviceResult = getMusicPlay({ params: { songmid: "003rJSwm3TechU" } });',
+			'const sdkResult = search({ key: "周杰伦" });',
 			'void callback;',
+			'void serviceResult;',
+			'void sdkResult;',
+			'void sdkGetMusicPlay;',
+			'void getLyric;',
+			'void getQQLoginQr;',
+			'void checkQQLoginQr;',
 			'',
 		].join('\n'),
 	);
@@ -112,6 +155,46 @@ const writeTypesFixture = () => {
 					types: ['node'],
 				},
 				include: ['esm-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.mcp-node16.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'Node16',
+					moduleResolution: 'Node16',
+					strict: true,
+					noEmit: true,
+					ignoreDeprecations: '6.0',
+					skipLibCheck: true,
+					types: ['node'],
+				},
+				include: ['mcp-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.mcp-bundler.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'ESNext',
+					moduleResolution: 'Bundler',
+					strict: true,
+					noEmit: true,
+					ignoreDeprecations: '6.0',
+					skipLibCheck: true,
+					types: ['node'],
+				},
+				include: ['mcp-consumer.mts'],
 			},
 			null,
 			2,
@@ -220,8 +303,99 @@ describe('Package Entry Compatibility', () => {
 		60_000,
 	);
 
+	test(
+		'should expose service functions through the ESM services entry',
+		async () => {
+			const { stdout } = await runNode([
+				'--input-type=module',
+				'--eval',
+				`
+					const mod = await import('@sansenjian/qq-music-api/services');
+					if (typeof mod.getMusicPlay !== 'function' || typeof mod.getSearchByKey !== 'function') {
+						throw new Error('Expected ESM services entry to expose service functions');
+					}
+					console.log('esm services ok');
+				`,
+			]);
+
+			expect(stdout.trim()).toBe('esm services ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should expose service functions through the CJS services entry',
+		async () => {
+			const { stdout } = await runNode([
+				'--eval',
+				`
+					const mod = require('@sansenjian/qq-music-api/services');
+					if (typeof mod.getMusicPlay !== 'function' || typeof mod.getSearchByKey !== 'function') {
+						throw new Error('Expected CJS services entry to expose service functions');
+					}
+					console.log('cjs services ok');
+				`,
+			]);
+
+			expect(stdout.trim()).toBe('cjs services ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should expose SDK helpers through ESM and CJS sdk entries',
+		async () => {
+			const { stdout: esmStdout } = await runNode([
+				'--input-type=module',
+				'--eval',
+				`
+					const mod = await import('@sansenjian/qq-music-api/sdk');
+					if (
+						typeof mod.search !== 'function' ||
+						typeof mod.getMusicPlay !== 'function' ||
+						typeof mod.getLyric !== 'function' ||
+						typeof mod.getQQLoginQr !== 'function' ||
+						typeof mod.checkQQLoginQr !== 'function'
+					) {
+						throw new Error('Expected ESM sdk entry to expose helper functions');
+					}
+					console.log('esm sdk ok');
+				`,
+			]);
+			const { stdout: cjsStdout } = await runNode([
+				'--eval',
+				`
+					const mod = require('@sansenjian/qq-music-api/sdk');
+					if (
+						typeof mod.search !== 'function' ||
+						typeof mod.getMusicPlay !== 'function' ||
+						typeof mod.getLyric !== 'function' ||
+						typeof mod.getQQLoginQr !== 'function' ||
+						typeof mod.checkQQLoginQr !== 'function'
+					) {
+						throw new Error('Expected CJS sdk entry to expose helper functions');
+					}
+					console.log('cjs sdk ok');
+				`,
+			]);
+
+			expect(esmStdout.trim()).toBe('esm sdk ok');
+			expect(cjsStdout.trim()).toBe('cjs sdk ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
 	test('should emit a node shebang on the package bin entry', () => {
 		const binEntry = getPackageBinEntry();
+
+		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
+	});
+
+	test('should emit a node shebang on the MCP package bin entry', () => {
+		const binEntry = getMcpPackageBinEntry();
 
 		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
 	});
@@ -240,12 +414,95 @@ describe('Package Entry Compatibility', () => {
 		60_000,
 	);
 
+	test('should start the MCP CLI when invoked through a symlinked bin path', async () => {
+		fs.mkdirSync(outputDir, { recursive: true });
+		const realEntry = getMcpPackageBinEntry();
+		const symlinkEntry = path.join(outputDir, 'qq-music-api-mcp-bin.mjs');
+		fs.rmSync(symlinkEntry, { force: true });
+		fs.symlinkSync(realEntry, symlinkEntry);
+
+		const { stdout } = await runNode([symlinkEntry, '--help']);
+
+		expect(stdout).toContain('qq-music-api-mcp');
+	});
+
 	test('should print CLI help without starting the service', async () => {
 		const { stdout } = await runNode([getPackageBinEntry(), '--help']);
 
 		expect(stdout).toContain('qq-music-api config doctor');
 		expect(stdout).toContain('qq-music-api auth status');
+		expect(stdout).toContain('@sansenjian/qq-music-api-mcp');
+		expect(stdout).not.toContain('qq-music-api mcp start');
 	});
+
+	test(
+		'should expose MCP tools over stdio through the MCP package CLI',
+		async () => {
+			fs.mkdirSync(configDir, { recursive: true });
+			fs.writeFileSync(path.join(configDir, 'service-config.json'), '{ invalid json', 'utf-8');
+
+			const transport = new StdioClientTransport({
+				command: process.execPath,
+				args: [getMcpPackageBinEntry()],
+				cwd: projectRoot,
+				env: {
+					...process.env,
+					QQ_MUSIC_API_CONFIG_DIR: configDir,
+				},
+				stderr: 'pipe',
+			});
+			const client = new Client({
+				name: 'qq-music-api-package-entry-test',
+				version: '1.0.0',
+			});
+
+			try {
+				await client.connect(transport);
+				const tools = await client.listTools();
+				const toolNames = tools.tools.map(tool => tool.name);
+				const searchTool = tools.tools.find(tool => tool.name === 'qq_music_search_songs');
+
+				expect(toolNames).toEqual(expect.arrayContaining([
+					'qq_music_config_status',
+					'qq_music_list_apis',
+					'qq_music_search_songs',
+				]));
+				expect(searchTool?.inputSchema).toMatchObject({
+					type: 'object',
+					properties: {
+						keyword: expect.any(Object),
+						response_format: expect.any(Object),
+					},
+				});
+				expect(searchTool?.inputSchema.properties).not.toHaveProperty('remoteplace');
+				expect(searchTool?.outputSchema).toMatchObject({
+					type: 'object',
+					properties: {
+						ok: expect.any(Object),
+						tool: expect.any(Object),
+					},
+				});
+
+				const result = await client.callTool({
+					name: 'qq_music_config_status',
+					arguments: { response_format: 'json' },
+				});
+
+				expect(result.structuredContent).toMatchObject({
+					ok: true,
+					tool: 'qq_music_config_status',
+					data: {
+						configDir,
+						serviceConfigPath: path.join(configDir, 'service-config.json'),
+						userInfoPath: path.join(configDir, 'user-info.json'),
+					},
+				});
+			} finally {
+				await client.close();
+			}
+		},
+		60_000,
+	);
 
 	test('should return config paths as JSON', async () => {
 		const { stdout } = await runNode([getPackageBinEntry(), 'config', 'path', '--json']);
@@ -300,7 +557,7 @@ describe('Package Entry Compatibility', () => {
 			path.join(configDir, 'user-info.json'),
 			JSON.stringify({
 				loginUin: 'o123456',
-				cookie: 'uin=o123456; qqmusic_key=secret-value',
+				cookie: 'uin=o123456; malformed; qqmusic_key=secret-value',
 			}),
 			'utf-8',
 		);
@@ -359,6 +616,26 @@ describe('Package Entry Compatibility', () => {
 			writeTypesFixture();
 
 			await runTsc(path.join(typesDir, 'tsconfig.bundler.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose Node16-compatible types for MCP ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.mcp-node16.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose bundler-compatible types for MCP ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.mcp-bundler.json'));
 		},
 		60_000,
 	);

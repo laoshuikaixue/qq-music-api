@@ -1,7 +1,20 @@
 import { defineConfig, normalizePath } from 'vite';
 import { resolve } from 'node:path';
+import { builtinModules } from 'node:module';
 import { oxcTransform } from './plugins/vite-plugin-oxc-transform';
 import type { Plugin } from 'vite';
+
+const nodeBuiltins = [
+	...builtinModules,
+	...builtinModules.map(moduleName => `node:${moduleName}`),
+];
+
+const externalPackages = [
+	...nodeBuiltins,
+	'koa',
+	'@koa/router',
+	'axios',
+];
 
 function nodeBinShebang(): Plugin {
 	const binEntryIds = new Set([
@@ -52,6 +65,8 @@ export default defineConfig({
 				app: resolve(__dirname, 'src/app.ts'),
 				cli: resolve(__dirname, 'src/cli.ts'),
 				index: resolve(__dirname, 'src/index.ts'),
+				services: resolve(__dirname, 'src/services/index.ts'),
+				sdk: resolve(__dirname, 'src/sdk.ts'),
 			},
 			formats: ['es', 'cjs'],
 		},
@@ -59,11 +74,7 @@ export default defineConfig({
 		emptyOutDir: true,
 		copyPublicDir: false,
 		rollupOptions: {
-			external: [
-				'koa',
-				'@koa/router',
-				'axios',
-			],
+			external: id => externalPackages.some(pkg => id === pkg || id.startsWith(`${pkg}/`)),
 		},
 	},
 	resolve: {

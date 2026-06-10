@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { getConfigDir, resolveConfigPath } from './config/config-path';
 import { getUserInfo, setUserInfo } from './config/user-info-store';
 import type { UserInfo } from './types';
+import { getCookieKeys } from './util/cookieResolver';
 import pkg from '../package.json';
 
 interface CliIo {
@@ -124,6 +125,7 @@ Options:
 Notes:
   Running qq-music-api with no command keeps the legacy behavior and starts the HTTP service.
   Auth commands never print the full Cookie value.
+  MCP is published separately as @sansenjian/qq-music-api-mcp.
 `;
 
 const getPathPayload = () => {
@@ -153,16 +155,6 @@ const readJsonFileStatus = (filePath: string): JsonFileStatus => {
 			error: error instanceof Error ? error.message : 'Invalid JSON',
 		};
 	}
-};
-
-const getCookieKeys = (cookie: string | undefined): string[] => {
-	if (!cookie) return [];
-	return cookie
-		.split(';')
-		.map(item => item.trim())
-		.filter(Boolean)
-		.map(item => item.slice(0, item.indexOf('=')).trim())
-		.filter(Boolean);
 };
 
 const checkWritable = (configDir: string) => {
@@ -312,6 +304,15 @@ export const runCli = async (argv: string[] = process.argv.slice(2), io: CliIo =
 			if (parsed.json) printJson(io, payload);
 			else io.stdout(`Cleared auth state at ${payload.userInfoPath}`);
 			return 0;
+		}
+
+		if (command === 'mcp' && (subcommand === 'start' || subcommand === undefined)) {
+			return printError(
+				io,
+				parsed.json,
+				'MCP_PACKAGE_REQUIRED',
+				'MCP support moved to @sansenjian/qq-music-api-mcp. Install it and run qq-music-api-mcp instead.',
+			);
 		}
 
 		return printError(io, parsed.json, 'UNKNOWN_COMMAND', `Unknown command: ${parsed.args.join(' ') || command}`);

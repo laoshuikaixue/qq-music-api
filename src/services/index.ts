@@ -47,6 +47,9 @@ import getTopLists from './apis/rank/getTopLists';
 
 // recommend
 import getRecommendBanner from './apis/recommend/getRecommendBanner';
+import { getDailyRecommend, getPrivateFM, getNewSongs } from './apis/recommend/getDailyRecommend';
+import { getPersonalRecommend, getSimilarSongs } from './apis/recommend/getPersonalRecommend';
+import { getPlaylistTags, getPlaylistsByTag, getHotComments, getSingerListByArea } from './apis/extend/getPlaylistTags';
 
 // getQQLoginQr
 import getQQLoginQr from './apis/user/getQQLoginQr';
@@ -67,6 +70,17 @@ import { getUserLikedSongs } from './apis/user/getUserLikedSongs';
 import { getUserDetail } from './apis/user/getUserDetail';
 import { getUserCollectedAlbums, getUserCollectedSongLists } from './apis/user/getUserCollections';
 import { getUserFans, getUserFollowSingers, getUserFollowUsers } from './apis/user/getUserSocial';
+
+// user medal & profile extras (L-1124 research)
+import { getUserMedal } from './apis/user/getUserMedal';
+import { getMedalTabDetail } from './apis/user/getMedalTabDetail';
+import { getHideMedal } from './apis/user/getHideMedal';
+import { getListeningCalendar } from './apis/user/getListeningCalendar';
+import { getVipInfo } from './apis/user/getVipInfo';
+import { getFriendList } from './apis/user/getFriendList';
+import { getMusicGene } from './apis/user/getMusicGene';
+import { getUserFavMv } from './apis/user/getUserFavMv';
+import { getDislikeList } from './apis/user/getDislikeList';
 
 export {
 	downloadQQMusic,
@@ -107,6 +121,15 @@ export {
 	getTopLists,
 	// recommend
 	getRecommendBanner,
+	getDailyRecommend,
+	getPrivateFM,
+	getNewSongs,
+	getPersonalRecommend,
+	getSimilarSongs,
+	getPlaylistTags,
+	getPlaylistsByTag,
+	getHotComments,
+	getSingerListByArea,
 	// login
 	getQQLoginQr,
 	checkQQLoginQr,
@@ -119,5 +142,15 @@ export {
 	getUserCollectedAlbums,
 	getUserFollowSingers,
 	getUserFollowUsers,
-	getUserFans
+	getUserFans,
+	// medal & profile extras
+	getUserMedal,
+	getMedalTabDetail,
+	getHideMedal,
+	getListeningCalendar,
+	getVipInfo,
+	getFriendList,
+	getMusicGene,
+	getUserFavMv,
+	getDislikeList,
 };

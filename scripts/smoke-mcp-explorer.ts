@@ -1,17 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
-
-interface JsonRpcResponse<T = unknown> {
-	jsonrpc: '2.0';
-	id: number;
-	result?: T;
-	error?: {
-		code: number;
-		message: string;
-		data?: unknown;
-	};
-}
+import { parseJsonRpcResponse } from './smoke-mcp-explorer-utils';
 
 interface McpTool {
 	name: string;
@@ -98,9 +88,9 @@ const waitForHttpServer = async (server: ChildProcessWithoutNullStreams, getLogs
 			if (response.ok) {
 				return;
 			}
-		} catch {
-			await delay(250);
-		}
+		} catch {}
+
+		await delay(250);
 	}
 
 	throw new Error(`HTTP server did not become ready on ${baseUrl}.\n${getLogs()}`);
@@ -175,7 +165,8 @@ class JsonRpcStdioClient {
 				continue;
 			}
 
-			const response = JSON.parse(line) as JsonRpcResponse;
+			const response = parseJsonRpcResponse(line);
+			if (response === undefined) continue;
 			const pending = this.pending.get(response.id);
 			if (!pending) {
 				continue;

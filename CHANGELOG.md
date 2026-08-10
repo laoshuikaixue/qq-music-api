@@ -1,3 +1,9 @@
+## 2.5.0 (2026-08-10)
+
+### Bug Fixes
+
+* address PR 41 review comments (#42) ([ba107d1](https://github.com/sansenjian/qq-music-api/commit/ba107d1b427436d03ea138f68ad86efe5f08c76b))
+
 ## 2.4.0 (2026-06-10)
 
 ### Features

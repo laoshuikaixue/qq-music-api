@@ -85,11 +85,11 @@ describe('wx login qr services', () => {
 						code: 0,
 						data: {
 							musicid: 3048087505,
-							musickey: 'W_Xtest_musickey',
+							musickey: 'W_Xtest_musickey==',
 							encryptUin: 'v02encrypted',
-							loginType: 1,
-						},
-					},
+							loginType: 1
+						}
+					}
 				}),
 			);
 
@@ -101,11 +101,13 @@ describe('wx login qr services', () => {
 
 		const sessionCookie = body.session.cookie as string;
 		expect(sessionCookie).toContain('uin=3048087505');
-		expect(sessionCookie).toContain('qm_keyst=W_Xtest_musickey');
-		expect(sessionCookie).toContain('qqmusic_key=W_Xtest_musickey');
+		expect(sessionCookie).toContain('qm_keyst=W_Xtest_musickey==');
+		expect(sessionCookie).toContain('qqmusic_key=W_Xtest_musickey==');
 		expect(sessionCookie).toContain('euin=v02encrypted');
 		expect(sessionCookie).toContain('tmeLoginType=1');
 		expect(body.session.euin).toBe('v02encrypted');
+		// 值中的 = 不得被键值解析截断，保持与 cookie 字符串一致
+		expect(body.session.cookieObject.qm_keyst).toBe('W_Xtest_musickey==');
 	});
 
 	test('checkWXLoginQr reports expired QR for errcode 402', async () => {

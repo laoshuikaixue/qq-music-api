@@ -75,7 +75,10 @@ export const buildLoginSession = (cookie: string): LoginSession => {
 
 	const cookieObject: Record<string, string> = {};
 	cookieList.forEach(item => {
-		const [key, value = ''] = item.split('=');
+		// 仅按首个 = 分隔键值，保证值中的 = （base64 填充等）不丢失
+		const separator = item.indexOf('=');
+		const key = separator === -1 ? '' : item.slice(0, separator);
+		const value = separator === -1 ? '' : item.slice(separator + 1);
 		if (key && value) {
 			cookieObject[key] = value;
 		}

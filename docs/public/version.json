@@ -1,7 +1,7 @@
 {
   "version": "2.5.0",
   "name": "@sansenjian/qq-music-api",
-  "generatedAt": "2026-08-27T12:00:55.822Z",
-  "commit": "6d383706",
-  "branch": "fork/qingyi-sky/feat/register-require-grade-class"
+  "generatedAt": "2026-08-27T12:37:26.494Z",
+  "commit": "5ed272c",
+  "branch": "feature/wechat-qr-login"
 }

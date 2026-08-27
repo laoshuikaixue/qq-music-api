@@ -174,7 +174,7 @@ curl -X POST "http://localhost:3200/checkQQLoginQr" \
 
 **兼容接口：** `GET /user/getWXLoginQr`
 
-使用 QQ 音乐官方微信开放平台通道（`open.weixin.qq.com`），使用手机微信扫码即可登录（适用于无桌面 QQ 或绑定微信区的账号）。
+使用 QQ 音乐官方微信开放平台通道（`open.weixin.qq.com`），使用手机微信扫码即可登录（适用于绑定微信区的账号）。
 
 **示例：**
 

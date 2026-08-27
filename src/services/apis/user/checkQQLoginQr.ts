@@ -1,17 +1,12 @@
 import type { ApiFunction, ApiOptions, ApiResponse } from '../../../types/api';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
 import { getGtk, getGuid } from '../../../util/loginUtils';
+import {
+	buildLoginSession,
+	fetchWithTimeout,
+	parseSetCookie,
+} from '../../../util/loginUtils';
 
-interface LoginSession {
-	loginUin: string;
-	uin: string;
-	euin?: string;
-	cookie: string;
-	cookieList: string[];
-	cookieObject: Record<string, string>;
-}
-
-const REQUEST_TIMEOUT_MS = 10000;
 const DEBUG_ENABLED = process.env.DEBUG === 'true';
 
 const debugLog = (message: string, payload?: unknown) => {
@@ -20,59 +15,7 @@ const debugLog = (message: string, payload?: unknown) => {
 	}
 };
 
-const parseSetCookie = (setCookieHeader: string | null): string[] => {
-	if (!setCookieHeader) return [];
-	const cookies: string[] = [];
-	const parts = setCookieHeader.split(/,(?=\s*[a-zA-Z_]+=)/);
-	for (const part of parts) {
-		const cookiePair = part.split(';')[0].trim();
-		if (cookiePair && cookiePair.includes('=') && cookiePair.split('=')[1]) {
-			cookies.push(cookiePair);
-		}
-	}
-	return cookies;
-};
-
-const fetchWithTimeout = async (input: string, init: RequestInit = {}, timeout = REQUEST_TIMEOUT_MS) => {
-	const controller = new AbortController();
-	const timer = setTimeout(() => controller.abort(), timeout);
-
-	try {
-		return await fetch(input, {
-			...init,
-			signal: controller.signal,
-		});
-	} finally {
-		clearTimeout(timer);
-	}
-};
-
-const buildLoginSession = (cookie: string): LoginSession => {
-	const cookieList = cookie
-		.split(';')
-		.map(item => item.trim())
-		.filter(Boolean);
-
-	const cookieObject: Record<string, string> = {};
-	cookieList.forEach(item => {
-		const [key, value = ''] = item.split('=');
-		if (key && value) {
-			cookieObject[key] = value;
-		}
-	});
-
-	const loginUin = cookieObject.uin || '';
-
-	return {
-		loginUin,
-		uin: loginUin,
-		cookie,
-		cookieList,
-		cookieObject,
-	};
-};
-
-const extractEncryptedUin = (text: string): string | undefined => {
+export const extractEncryptedUin = (text: string): string | undefined => {
 	if (!text.trim()) return undefined;
 
 	try {

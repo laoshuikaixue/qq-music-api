@@ -1,9 +1,11 @@
 import {
 	checkQQLoginQr,
+	checkWXLoginQr,
 	getLyric,
 	getMusicPlay,
 	getQQLoginQr,
 	getSearchByKey,
+	getWXLoginQr,
 } from './services';
 import type { ApiOptions, ApiResponse } from './types/api';
 
@@ -38,6 +40,10 @@ export interface GetLyricOptions {
 export interface CheckQQLoginQrOptions {
 	ptqrtoken: string | number;
 	qrsig: string;
+}
+
+export interface CheckWXLoginQrOptions {
+	uuid: string;
 }
 
 const withCookie = (option: RequestOption = {}, cookie?: string): RequestOption => {
@@ -122,9 +128,19 @@ export const checkLoginQr = async ({
 	},
 });
 
+export const getWechatQr = async (): Promise<ApiResponse> => getWXLoginQr({});
+
+export const checkWechatQr = async ({ uuid }: CheckWXLoginQrOptions): Promise<ApiResponse> =>
+	checkWXLoginQr({
+		method: 'post',
+		params: { uuid },
+	});
+
 export {
 	checkLoginQr as checkQQLoginQr,
+	checkWechatQr as checkWXLoginQr,
 	getLoginQr as getQQLoginQr,
+	getWechatQr as getWXLoginQr,
 	getPlayUrl as getMusicPlay,
 	lyric as getLyric,
 };

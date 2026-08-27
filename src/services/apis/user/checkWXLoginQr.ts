@@ -7,6 +7,23 @@ const WX_LOGIN_APPID = 'wx48db31d50e334801';
 const WX_POLL_TIMEOUT_MS = 35000;
 const WX_STATUS_RE = /window\.wx_errcode=(\d+);window\.wx_code='([^']*)'/;
 
+// 微信区 musicid 超出 Number.MAX_SAFE_INTEGER，JSON.parse 会截断末位；
+// 必须从原始响应文本中按字符串形态提取
+const WX_MUSICID_RES = [
+	/"strMusicid"\s*:\s*"(\d+)"/,
+	/"musicid"\s*:\s*(\d+)/,
+];
+
+const extractMusicIdText = (rawText: string): string => {
+	for (const pattern of WX_MUSICID_RES) {
+		const match = rawText.match(pattern);
+		if (match?.[1]) {
+			return match[1];
+		}
+	}
+	return '';
+};
+
 const pollWXQrStatus = async (uuid: string): Promise<{ errcode: string; code: string }> => {
 	const url = `https://lp.open.weixin.qq.com/connect/l/qrconnect?uuid=${encodeURIComponent(uuid)}&_=${Date.now()}`;
 
@@ -70,7 +87,7 @@ const exchangeWXCodeForSession = async (
 	}
 
 	const data = parsed.req.data || {};
-	const musicid = String(data.musicid ?? '');
+	const musicid = extractMusicIdText(loginText);
 	const musickey = String(data.musickey ?? '');
 	if (!musicid || !musickey) {
 		throw new Error('login response missing credential');

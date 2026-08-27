@@ -76,22 +76,15 @@ describe('wx login qr services', () => {
 
 	test('checkWXLoginQr exchanges confirmed code for music session', async () => {
 		const fetchMock = vi.mocked(globalThis.fetch);
+		// 模拟真实上游：微信区 musicid 为超出 MAX_SAFE_INTEGER 的 19 位整数，
+		// 原始 JSON 文本中的数值一旦 JSON.parse 就会精度截断
+		const bigId = '1152921505354550783';
+		const rawLoginText =
+			`{"code":0,"req":{"code":0,"data":{"musicid":${bigId},"strMusicid":"${bigId}",` +
+			`"musickey":"W_Xtest_musickey==","encryptUin":"v02encrypted","loginType":1}}}`;
 		fetchMock
 			.mockResolvedValueOnce(textResponse("window.wx_errcode=405;window.wx_code='wxcodedata';"))
-			.mockResolvedValueOnce(
-				jsonResponse({
-					code: 0,
-					req: {
-						code: 0,
-						data: {
-							musicid: 3048087505,
-							musickey: 'W_Xtest_musickey==',
-							encryptUin: 'v02encrypted',
-							loginType: 1
-						}
-					}
-				}),
-			);
+			.mockResolvedValueOnce(textResponse(rawLoginText));
 
 		const result = await checkWXLoginQr({ params: { uuid: 'uuid-1' } });
 
@@ -100,7 +93,9 @@ describe('wx login qr services', () => {
 		expect(body.isOk).toBe(true);
 
 		const sessionCookie = body.session.cookie as string;
-		expect(sessionCookie).toContain('uin=3048087505');
+		expect(sessionCookie).toContain(`uin=${bigId}`);
+		expect(sessionCookie).toContain(`qqmusic_uin=${bigId}`);
+		expect(sessionCookie).not.toContain('uin=1152921505354550800');
 		expect(sessionCookie).toContain('qm_keyst=W_Xtest_musickey==');
 		expect(sessionCookie).toContain('qqmusic_key=W_Xtest_musickey==');
 		expect(sessionCookie).toContain('euin=v02encrypted');
@@ -108,6 +103,7 @@ describe('wx login qr services', () => {
 		expect(body.session.euin).toBe('v02encrypted');
 		// 值中的 = 不得被键值解析截断，保持与 cookie 字符串一致
 		expect(body.session.cookieObject.qm_keyst).toBe('W_Xtest_musickey==');
+		expect(body.session.uin).toBe(bigId);
 	});
 
 	test('checkWXLoginQr reports expired QR for errcode 402', async () => {

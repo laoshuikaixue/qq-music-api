@@ -3,6 +3,25 @@ import { customResponse, errorResponse } from '../../../util/apiResponse';
 import { buildLoginSession, fetchWithTimeout } from '../../../util/loginUtils';
 import { extractEncryptedUin } from './checkQQLoginQr';
 
+interface LoginResponseData {
+	musicid?: number;
+	musickey?: string;
+	encryptUin?: string;
+	loginType?: number;
+	openid?: string;
+	unionid?: string;
+}
+
+interface LoginResponseReq {
+	code?: number;
+	data?: LoginResponseData;
+}
+
+interface LoginResponse {
+	code?: number;
+	req?: LoginResponseReq;
+}
+
 const WX_LOGIN_APPID = 'wx48db31d50e334801';
 const WX_POLL_TIMEOUT_MS = 35000;
 const WX_STATUS_RE = /window\.wx_errcode=(\d+);window\.wx_code='([^']*)'/;
@@ -38,7 +57,7 @@ const pollWXQrStatus = async (
 		const text = (await response.text()) || '';
 		const match = text.match(WX_STATUS_RE);
 		if (!match) {
-			throw new Error('invalid status payload');
+			throw new Error('无效的状态响应');
 		}
 		return { errcode: match[1], code: match[2] };
 	} catch (error) {
@@ -77,22 +96,22 @@ const exchangeWXCodeForSession = async (
 	});
 	const loginText = (await response.text()) || '';
 
-	let parsed: any;
+	let parsed: LoginResponse;
 	try {
-		parsed = JSON.parse(loginText);
+		parsed = JSON.parse(loginText) as LoginResponse;
 	} catch {
-		throw new Error('login response is not json');
+		throw new Error('登录响应不是有效的 JSON');
 	}
 
 	if (Number(parsed?.code) !== 0 || Number(parsed?.req?.code) !== 0) {
-		throw new Error(`login failed with code ${parsed?.req?.code ?? parsed?.code}`);
+		throw new Error(`登录失败，错误码: ${parsed?.req?.code ?? parsed?.code}`);
 	}
 
-	const data = parsed.req.data || {};
+	const data = parsed.req?.data || {};
 	const musicid = extractMusicIdText(loginText);
 	const musickey = String(data.musickey ?? '');
 	if (!musicid || !musickey) {
-		throw new Error('login response missing credential');
+		throw new Error('登录响应缺少凭证信息');
 	}
 
 	const cookiePairs: string[] = [

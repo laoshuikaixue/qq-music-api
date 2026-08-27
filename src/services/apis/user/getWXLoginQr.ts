@@ -41,11 +41,11 @@ const getWXLoginQr: ApiFunction = async (_props: ApiOptions) => {
 			},
 		});
 		if (!pageResponse.ok) {
-			return errorResponse('Failed to load WeChat login page', 502);
+			return errorResponse('无法加载微信登录页面', 502);
 		}
 		const uuid = extractWXUuid(await pageResponse.text());
 		if (!uuid) {
-			return errorResponse('Failed to get uuid from WeChat login page', 502);
+			return errorResponse('无法从微信登录页面获取 uuid', 502);
 		}
 
 		const imgResponse = await fetchWithTimeout(
@@ -55,14 +55,14 @@ const getWXLoginQr: ApiFunction = async (_props: ApiOptions) => {
 			},
 		);
 		if (!imgResponse.ok) {
-			return errorResponse('Failed to fetch WeChat QR image', 502);
+			return errorResponse('获取微信二维码图片失败', 502);
 		}
 		const data = await imgResponse.arrayBuffer();
 		const img = `data:image/jpeg;base64,${Buffer.from(data).toString('base64')}`;
 
 		return customResponse({ img, uuid }, 200);
 	} catch {
-		return errorResponse('Failed to fetch WeChat login QR', 502);
+		return errorResponse('获取微信登录二维码失败', 502);
 	}
 };
 

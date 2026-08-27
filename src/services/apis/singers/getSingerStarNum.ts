@@ -11,7 +11,8 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
   });
   
   const options = Object.assign(option, {
-    params: data
+    params: data,
+    headers: { Referer: 'https://y.qq.com' }
   });
   
   return handleApi(

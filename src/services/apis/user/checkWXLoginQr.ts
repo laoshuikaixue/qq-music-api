@@ -96,6 +96,15 @@ const exchangeWXCodeForSession = async (
 	});
 	const loginText = (await response.text()) || '';
 
+	// 捕获上游响应中的 Set-Cookie 头（可能包含 p_skey 等额外 Cookie）
+	const setCookieHeaders: string[] = [];
+	if (typeof response.headers.getSetCookie === 'function') {
+		setCookieHeaders.push(...response.headers.getSetCookie());
+	} else {
+		const single = response.headers.get('Set-Cookie');
+		if (single) setCookieHeaders.push(single);
+	}
+
 	let parsed: LoginResponse;
 	try {
 		parsed = JSON.parse(loginText) as LoginResponse;
@@ -129,6 +138,18 @@ const exchangeWXCodeForSession = async (
 	}
 	if (data.unionid) {
 		cookiePairs.push(`wx_unionid=${data.unionid}`);
+	}
+
+	// 从 Set-Cookie 头中提取 cookie 键值对，补充到会话 cookie 中
+	for (const setCookie of setCookieHeaders) {
+		const cookiePair = setCookie.split(';')[0]?.trim();
+		if (cookiePair && cookiePair.includes('=')) {
+			const name = cookiePair.split('=')[0].trim();
+			// 避免覆盖已设置的 cookie
+			if (!cookiePairs.some(c => c.startsWith(`${name}=`))) {
+				cookiePairs.push(cookiePair);
+			}
+		}
 	}
 
 	const cookie = cookiePairs.join('; ');

@@ -1,3 +1,9 @@
+## 2.6.0 (2026-08-27)
+
+### Features
+
+* 增加微信登录二维码相关接口与功能 (#45) ([15a38f8](https://github.com/sansenjian/qq-music-api/commit/15a38f8b8e0663aa7afea1440f92c6dd3b36100f))
+
 ## 2.5.0 (2026-08-10)
 
 ### Bug Fixes

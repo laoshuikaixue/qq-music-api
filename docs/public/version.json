@@ -1,7 +1,7 @@
 {
-  "version": "2.5.0",
+  "version": "2.6.0",
   "name": "@sansenjian/qq-music-api",
-  "generatedAt": "2026-08-27T12:37:26.494Z",
-  "commit": "5ed272c",
-  "branch": "feature/wechat-qr-login"
+  "generatedAt": "2026-08-27T15:02:04.152Z",
+  "commit": "15a38f8",
+  "branch": "main"
 }

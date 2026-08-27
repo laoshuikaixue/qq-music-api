@@ -120,6 +120,7 @@ describe('services/apis coverage boost', () => {
           utf8: 1,
           r: 1234567890,
         },
+        headers: { Referer: 'https://y.qq.com' },
       },
     });
   });

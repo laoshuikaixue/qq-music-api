@@ -168,6 +168,46 @@ curl -X POST "http://localhost:3200/checkQQLoginQr" \
 当前实现会对超时、二维码失效、提取不到 `checkSigUrl`、提取不到 `p_skey`、授权跳转缺少 `code` 等场景返回明确错误。
 :::
 
+### 获取微信登录二维码
+
+**接口：** `GET /getWXLoginQr`
+
+**兼容接口：** `GET /user/getWXLoginQr`
+
+使用 QQ 音乐官方微信开放平台通道（`open.weixin.qq.com`），使用手机微信扫码即可登录（适用于无桌面 QQ 或绑定微信区的账号）。
+
+**示例：**
+
+```bash
+curl "http://localhost:3200/getWXLoginQr"
+```
+
+### 检查微信扫码登录状态
+
+**接口：** `POST /checkWXLoginQr`
+
+**兼容接口：** `POST /user/checkWXLoginQr`
+
+**请求体参数：**
+
+| 参数 | 类型   | 必填 | 说明                 |
+| ---- | ------ | ---- | -------------------- |
+| uuid | string | 是   | 微信二维码会话标识   |
+
+**示例：**
+
+```bash
+curl -X POST "http://localhost:3200/checkWXLoginQr" \
+  -H "Content-Type: application/json" \
+  -d '{"uuid":"你的 uuid"}'
+```
+
+登录成功时返回的 `session.cookie` 已包含 `uin` / `qqmusic_key` / `qm_keyst` / `euin` / `tmeLoginType=1`，可直接作为用户 Cookie 调用其余接口。
+
+::: tip 提示
+本接口基于微信开放平台长轮询实现，单次调用最多阻塞约 35 秒；`errcode=404` 表示已扫码待确认，`402` 表示二维码过期（需重新获取），`403` 表示用户取消。
+:::
+
 ## 批量接口
 
 ### 批量获取歌曲信息

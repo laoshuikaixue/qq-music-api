@@ -57,6 +57,12 @@ import getQQLoginQr from './apis/user/getQQLoginQr';
 // checkQQLoginQr
 import checkQQLoginQr from './apis/user/checkQQLoginQr';
 
+// getWXLoginQr
+import getWXLoginQr from './apis/user/getWXLoginQr';
+
+// checkWXLoginQr
+import checkWXLoginQr from './apis/user/checkWXLoginQr';
+
 // getUserPlaylists
 import { getUserPlaylists } from './apis/user/getUserPlaylists';
 
@@ -133,6 +139,8 @@ export {
 	// login
 	getQQLoginQr,
 	checkQQLoginQr,
+	getWXLoginQr,
+	checkWXLoginQr,
 	// user
 	getUserPlaylists,
 	getUserAvatar,

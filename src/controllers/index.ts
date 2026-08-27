@@ -44,6 +44,8 @@ import getTicketInfoController from './getTicketInfo';
 import getImageUrlController from './getImageUrl';
 import getQQLoginQrController from './getQQLoginQr';
 import checkQQLoginQrController from './checkQQLoginQr';
+import getWXLoginQrController from './getWXLoginQr';
+import checkWXLoginQrController from './checkWXLoginQr';
 import cookiesController from './cookies';
 import getUserPlaylistsController from './getUserPlaylists';
 import getUserAvatarController from './getUserAvatar';
@@ -119,6 +121,8 @@ const controllers: Controllers = {
 	getImageUrl: getImageUrlController,
 	getQQLoginQr: getQQLoginQrController,
 	checkQQLoginQr: checkQQLoginQrController,
+	getWXLoginQr: getWXLoginQrController,
+	checkWXLoginQr: checkWXLoginQrController,
 	getUserPlaylists: getUserPlaylistsController,
 	getUserAvatar: getUserAvatarController,
 	getUserLikedSongs: getUserLikedSongsController,

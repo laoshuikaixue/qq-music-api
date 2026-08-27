@@ -766,10 +766,6 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		path: '/checkQQLoginQr',
 		aliases: ['/user/checkQQLoginQr'],
 		description: 'Check a QQ login QR code session.',
-		queryParams: params([
-			{ name: 'ptqrtoken', required: true },
-			{ name: 'qrsig', required: true },
-		]),
 	},
 	{
 		name: 'getWXLoginQr',
@@ -787,8 +783,7 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		path: '/checkWXLoginQr',
 		aliases: ['/user/checkWXLoginQr'],
 		description:
-			'Check a WeChat login QR code session. Long-polls until scanned/confirmed/expired.',
-		queryParams: params([{ name: 'uuid', required: true }]),
+			'Check a WeChat login QR code session. Long-polls until scanned/confirmed/expired. Accepts uuid via JSON body or query string.',
 	},
 	{
 		name: 'getDailyRecommend',

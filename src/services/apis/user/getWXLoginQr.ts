@@ -1,5 +1,6 @@
 import type { ApiFunction, ApiOptions } from '../../../types/api';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
+import { fetchWithTimeout } from '../../../util/loginUtils';
 
 // QQ 音乐网页版官方微信开放平台 AppID，redirect 指向官方 wx_redirect 页
 const WX_LOGIN_APPID = 'wx48db31d50e334801';
@@ -32,7 +33,7 @@ const getWXLoginQr: ApiFunction = async (_props: ApiOptions) => {
 		const redirectUri = encodeURIComponent(WX_REDIRECT_URI);
 		const pageUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=${WX_LOGIN_APPID}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_login&state=qqmusic`;
 
-		const pageResponse = await fetch(pageUrl, {
+		const pageResponse = await fetchWithTimeout(pageUrl, {
 			headers: {
 				Referer: 'https://y.qq.com/',
 				'User-Agent':
@@ -47,9 +48,12 @@ const getWXLoginQr: ApiFunction = async (_props: ApiOptions) => {
 			return errorResponse('Failed to get uuid from WeChat login page', 502);
 		}
 
-		const imgResponse = await fetch(`https://open.weixin.qq.com/connect/qrcode/${uuid}`, {
-			headers: { Referer: 'https://open.weixin.qq.com/connect/qrconnect' },
-		});
+		const imgResponse = await fetchWithTimeout(
+			`https://open.weixin.qq.com/connect/qrcode/${uuid}`,
+			{
+				headers: { Referer: 'https://open.weixin.qq.com/connect/qrconnect' },
+			},
+		);
 		if (!imgResponse.ok) {
 			return errorResponse('Failed to fetch WeChat QR image', 502);
 		}

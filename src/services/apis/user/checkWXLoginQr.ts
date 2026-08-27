@@ -24,7 +24,9 @@ const extractMusicIdText = (rawText: string): string => {
 	return '';
 };
 
-const pollWXQrStatus = async (uuid: string): Promise<{ errcode: string; code: string }> => {
+const pollWXQrStatus = async (
+	uuid: string,
+): Promise<{ errcode: string; code: string; timeout?: boolean }> => {
 	const url = `https://lp.open.weixin.qq.com/connect/l/qrconnect?uuid=${encodeURIComponent(uuid)}&_=${Date.now()}`;
 
 	try {
@@ -40,9 +42,9 @@ const pollWXQrStatus = async (uuid: string): Promise<{ errcode: string; code: st
 		}
 		return { errcode: match[1], code: match[2] };
 	} catch (error) {
-		if ((error as Error).name === 'AbortError') {
-			// 长轮询无事件时微信侧会挂起至超时，视为等待继续
-			return { errcode: '408', code: '' };
+		if ((error as Error).name === 'AbortError' || (error as Error).name === 'TimeoutError') {
+			// 长轮询等待期超时属常态空转：无事件即按未扫码继续，timeout 供调用方区分
+			return { errcode: '408', code: '', timeout: true };
 		}
 		throw error;
 	}
@@ -128,7 +130,7 @@ const checkWXLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise
 	}
 
 	try {
-		const { errcode, code } = await pollWXQrStatus(uuid);
+		const { errcode, code, timeout } = await pollWXQrStatus(uuid);
 
 		if (errcode === '405' && code) {
 			const { session, message } = await exchangeWXCodeForSession(code);
@@ -144,9 +146,19 @@ const checkWXLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise
 		if (errcode === '404') {
 			return customResponse({ isOk: false, scanned: true, message: '已扫描，等待确认' }, 200);
 		}
-		return customResponse({ isOk: false, message: '未扫描二维码' }, 200);
+		return customResponse(
+			timeout
+				? { isOk: false, timeout: true, message: '本轮等待超时，请稍后重试' }
+				: { isOk: false, message: '未扫描二维码' },
+			200,
+		);
 	} catch (error) {
-		return errorResponse(error instanceof Error ? error.message : '登录检查失败', 502);
+		const err = error as Error;
+		// 凭证交换阶段的网络级超时与 QQ 流程保持同一语义（504）
+		if (err?.name === 'AbortError' || err?.name === 'TimeoutError') {
+			return errorResponse('登录检查超时', 504);
+		}
+		return errorResponse(err?.message || '登录检查失败', 502);
 	}
 };
 

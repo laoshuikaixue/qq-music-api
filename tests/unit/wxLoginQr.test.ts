@@ -134,4 +134,20 @@ describe('wx login qr services', () => {
 
 		expect(result.status).toBe(400);
 	});
+
+	test('checkWXLoginQr returns 504 when credential exchange times out', async () => {
+		const fetchMock = vi.mocked(globalThis.fetch);
+		fetchMock
+			.mockResolvedValueOnce(textResponse("window.wx_errcode=405;window.wx_code='wxcodedata';"))
+			.mockImplementationOnce(async () => {
+				const abortError = new Error('The operation was aborted due to timeout');
+				abortError.name = 'AbortError';
+				throw abortError;
+			});
+
+		const result = await checkWXLoginQr({ params: { uuid: 'uuid-4' } });
+
+		expect(result.status).toBe(504);
+		expect((result.body as any).error).toContain('超时');
+	});
 });
